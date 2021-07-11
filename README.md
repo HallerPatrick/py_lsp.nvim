@@ -21,8 +21,12 @@ Plug 'HallerPatrick/py_lsp.nvim'
 
 ```
 
-```viml
+```lua
 
+-- Init pyright server completly
+require'py_lsp'.setup()
+
+-- Or just use the util to inject python path
 require'lspconfig'.pyright.setup {
     before_init = function(_, config)
         config.settings.python.pythonPath = require'py_lsp'.get_python_path(config.root_dir)
@@ -31,6 +35,15 @@ require'lspconfig'.pyright.setup {
 
 ```
 
+
+## Features
+
+Get current venv used
+
+`:PyLspCurrentVenv`
+
+
+## Note
 
 This is by no way complete and supports only standard virtualenvs with a `pyvenv.cfg` file
 somewhere in the cwd.
