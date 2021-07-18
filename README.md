@@ -48,8 +48,11 @@ Get current venv used
 This is by no way complete and supports only standard virtualenvs with a `pyvenv.cfg` file
 somewhere in the cwd.
 
-## Potential TODOs
+## TODOs
 
+- [ ] Allow for configuration of plugin
+    - [ ] Order on which to look for venv
+    - [ ] Disable auto sourcing
 - [ ] Allow for non local venvs to be used
 - [ ] Allow tools like poetry to be used
 - [ ] Nice TUI for some more information (current activate venv etc)
