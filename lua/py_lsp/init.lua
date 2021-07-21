@@ -1,55 +1,43 @@
-
 local nvim_lsp = require 'lspconfig'
-
-local configs = require('lspconfig/configs')
 local util = require('lspconfig/util')
+local o = require('py_lsp.options')
+
 local path = util.path
 
 local M = {}
 
-function dump(o)
-   if type(o) == 'table' then
-      local s = '{ '
-      for k,v in pairs(o) do
-         if type(k) ~= 'number' then k = '"'..k..'"' end
-         s = s .. '['..k..'] = ' .. dump(v) .. ','
-      end
-      return s .. '} '
-   else
-      return tostring(o)
-   end
-end
-
-function M.get_python_path(workspace, venv_name)
+local function get_python_path(workspace, source_strategy, venv_name)
   -- Use activated virtualenv.
   if vim.env.VIRTUAL_ENV then
       print("Using current venv")
     return path.join(vim.env.VIRTUAL_ENV, 'bin', 'python')
   end
 
-  -- Look for target venv in current directory
-  if venv_name ~= nil then
-    local match = vim.fn.glob(path.join(workspace, venv_name, 'pyvenv.cfg'))
+  local patterns = {'*', '.*'}
 
-    if match ~= "" then
-      return path.join(path.dirname(match, 'bin', 'python'))
-    end
+  if venv_name ~= nil then
+    patterns = { venv_name }
   end
 
   -- Find and use virtualenv in workspace directory.
-  for _, pattern in ipairs({'*', '.*'}) do
+  for _, pattern in ipairs(patterns) do
 
     local match = vim.fn.glob(path.join(workspace, pattern, 'pyvenv.cfg'))
 
-    if match ~= '' then
-      local pathh = path.join(path.dirname(match), 'bin', 'python')
-      print("PATH: " .. pathh)
-      return pathh
+    if match ~= '' and vim.tbl_contains(source_strategy, "default") then
+      -- TODO: We now take the one venv found first, what to change?
+      if string.find(match, "\n") then
+        match = vim.gsplit(match, "\n")()
+      end
+
+      local py_path = path.join(path.dirname(match), 'bin', 'python')
+      return py_path
     end
 
     -- If no standard venv found look for poetry
     match = vim.fn.glob(path.join(workspace, 'poetry.lock'))
-    if match ~= '' then
+
+    if match ~= '' and vim.tbl_contains(source_strategy, "poetry") ~= nil then
         local venv = vim.fn.trim(vim.fn.system('poetry env info -p'))
         return path.join(venv, 'bin', 'python')
     end
@@ -60,27 +48,7 @@ function M.get_python_path(workspace, venv_name)
 end
 
 
-function M.server_configs(venv_name)
-  return {
-    on_attach = require'completion'.on_attach,
-    before_init = function(_, config)
-        config.settings.python.pythonPath = M.get_python_path(config.root_dir, venv_name)
-    end
-  }
-end
-
-local function setup_lsp() return nvim_lsp.pyright.setup(M.server_configs()) end
-
-function M.print_venv()
-  local client = M.get_client()
-  if client == nil then
-    print("No venv activated")
-    return
-  end
-  print("Client pyright with venv: " .. client.config.settings.python.pythonPath)
-end
-
-function M.get_client()
+local function get_client()
   local clients = vim.lsp.get_active_clients()
 
   if clients == nil or clients == {} then
@@ -88,21 +56,33 @@ function M.get_client()
     return
   end
 
+  local current_client = nil
   for _, client in ipairs(clients) do
     if client ~= nil and client.name == "pyright" then
-      return client
+      current_client = client
     end
   end
+  return current_client
 end
 
-function M.stop_client()
-  local client = M.get_client()
+M.print_venv = function()
+  local client = get_client()
+  if client == nil then
+    print("No venv activated")
+    return
+  end
+  print("Client pyright with venv: " .. client.config.settings.python.pythonPath)
+end
+
+M.stop_client = function()
+  local client = get_client()
   vim.lsp.stop_client(client.id)
 end
 
-function M.activate_venv(venv_name)
-  local current_client = M.get_client()
+M.activate_venv = function (venv_name)
+  local current_client = get_client()
   local cwd = vim.fn["getcwd"]()
+
   local match = vim.fn.glob(path.join(cwd, venv_name, 'pyvenv.cfg'))
 
   if match ~= "" then
@@ -112,11 +92,11 @@ function M.activate_venv(venv_name)
       vim.lsp.stop_client(current_client.id)
     end
 
-    nvim_lsp.pyright.setup(M.server_configs(venv_name))
-
+    M.setup { venv_name = venv_name }
     -- local current_buffer = vim.get_bufnr()
-    local current_buffer = vim.fn["bufnr"]()
-    vim.lsp.buf_attach_client(current_buffer, M.get_client().id)
+
+    -- local current_buffer = vim.fn["bufnr"]()
+    -- vim.lsp.buf_attach_client(current_buffer, get_client().id)
     print("Activated venv")
   else
     print("Cannot find venv")
@@ -124,8 +104,28 @@ function M.activate_venv(venv_name)
   end
 end
 
-function M.setup()
-  setup_lsp()
+local function on_init(source_strategy, venv_name)
+  return function(client)
+      -- print(get_python_path(client.config.root_dir, source_strategy, venv_name))
+      client.config.settings.python.pythonPath = get_python_path(client.config.root_dir, source_strategy, venv_name)
+    end
+end
+
+M.setup = function (opts)
+
+  -- Collect all opts from defaults and user
+  opts = opts or {}
+  o.set(opts)
+
+  -- Setup server opts passed to language server
+  M["server_opts"] = {
+    on_init = on_init(o.get().source_strategy, opts.venv_name),
+    on_attach = o.get().on_attach,
+    -- TODO: Can both on_init and before_init be used?
+    before_init = o.get().on_init
+  }
+
+  nvim_lsp.pyright.setup(M.server_opts)
 end
 
 return M

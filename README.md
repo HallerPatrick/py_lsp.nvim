@@ -11,28 +11,20 @@ This plugin currently includes a utility to automatically pass a virtualenv to
 the pyright lsp server before initialization also take from the [Issue](https://github.com/neovim/nvim-lspconfig/issues/500#issuecomment-851247107). 
 (Thanks [lithammer](https://github.com/lithammer) and others).
 
+
+#### WARNING: This is in a early stage. The API will change!
+
+
 This can be done as following:
 
 
 ```viml
 " Use your plugin manager of choice
-
 Plug 'HallerPatrick/py_lsp.nvim'
-
 ```
 
 ```lua
-
--- Init pyright server completly
 require'py_lsp'.setup()
-
--- Or just use the util to inject python path
-require'lspconfig'.pyright.setup {
-    before_init = function(_, config)
-        config.settings.python.pythonPath = require'py_lsp'.get_python_path(config.root_dir)
-    end
-}
-
 ```
 
 
@@ -42,6 +34,24 @@ Get current venv used
 
 `:PyLspCurrentVenv`
 
+Deactivate current venv, which means shutting down the lsp server
+
+`:PyLspDeactiveVenv`
+
+Activate venv, optional accepts a venv to choose from, which is in the current workspace
+
+`:PyLspActivateVenv <venv_name>`
+
+### Configuratio
+
+Default:
+
+```
+Default Values:
+    language_server = "pyright",
+    on_attach = require'completion'.on_attach,
+    source_strategy = {"default", "poetry", "system"}
+```
 
 ## Note
 
