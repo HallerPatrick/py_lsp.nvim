@@ -42,12 +42,13 @@ Activate venv, optional accepts a venv to choose from, which is in the current w
 
 `:PyLspActivateVenv <venv_name>`
 
-### Configuratio
+### Configuration
 
 Default:
 
 ```
 Default Values:
+    auto_source = true,
     language_server = "pyright",
     on_attach = require'completion'.on_attach,
     source_strategy = {"default", "poetry", "system"}
@@ -64,6 +65,7 @@ somewhere in the cwd.
     - [ ] Order on which to look for venv
     - [ ] Disable auto sourcing
 - [ ] Allow for non local venvs to be used
-- [ ] Allow tools like poetry to be used
+- [x] Allow tools like poetry to be used
 - [ ] Nice TUI for some more information (current activate venv etc)
 - [ ] Support for statuslines to expose current venv name
+- [ ] Allow for runnables
