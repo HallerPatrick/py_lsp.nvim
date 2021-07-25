@@ -1,6 +1,7 @@
 local nvim_lsp = require 'lspconfig'
 local util = require('lspconfig/util')
 local o = require('py_lsp.options')
+local u = require('py_lsp.utils')
 
 local path = util.path
 
@@ -47,6 +48,11 @@ local function get_python_path(workspace, source_strategy, venv_name)
   return exepath('python3') or exepath('python') or 'python'
 end
 
+local function on_init(source_strategy, venv_name)
+  return function(client)
+      client.config.settings.python.pythonPath = get_python_path(client.config.root_dir, source_strategy, venv_name)
+    end
+end
 
 local function get_client()
   local clients = vim.lsp.get_active_clients()
@@ -104,14 +110,11 @@ M.activate_venv = function (venv_name)
   end
 end
 
-local function on_init(source_strategy, venv_name)
-  return function(client)
-      -- print(get_python_path(client.config.root_dir, source_strategy, venv_name))
-      client.config.settings.python.pythonPath = get_python_path(client.config.root_dir, source_strategy, venv_name)
-    end
-end
-
 M.setup = function (opts)
+
+  u.define_command("PyLspCurrentVenv", "print_venv")
+  u.define_command("PyLspActivateVenv", "activate_venv")
+  u.define_command("PyLspDeactivateVenv", "stop_client")
 
   -- Collect all opts from defaults and user
   opts = opts or {}
@@ -125,7 +128,11 @@ M.setup = function (opts)
     before_init = o.get().on_init
   }
 
-  nvim_lsp.pyright.setup(M.server_opts)
+  if o.get().auto_source then
+    nvim_lsp.pyright.setup(M.server_opts)
+  end
+  
+  o.set({ auto_source = false })
 end
 
 return M
