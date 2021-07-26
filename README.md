@@ -54,7 +54,7 @@ to the LSP client for completion/linting.
 | `:PyLspCreateVenv`   | venv name | Creates a virtual env with given name (default: 'venv'). Requires `host_python` to be set and have `virtualenv` installed |
 | `:PyRun`             | command   | Run files and modules from current virtuale env                                                                           |
 
-
+Most of these commands can be also run over a popup menu with `:PyLspPopup`.
 
 
 #### Example Workflow
