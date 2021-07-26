@@ -1,11 +1,20 @@
 local nvim_lsp = require 'lspconfig'
 local util = require('lspconfig/util')
+local popups = require('popup')
 local o = require('py_lsp.options')
 local u = require('py_lsp.utils')
+local c = require('py_lsp.commands')
+local popup = require('py_lsp.popup')
+
 
 local path = util.path
+local format = string.format
 
 local M = {}
+
+M.o = {
+  current_venv = nil
+}
 
 local function get_python_path(workspace, source_strategy, venv_name)
   -- Use activated virtualenv.
@@ -51,7 +60,21 @@ end
 local function on_init(source_strategy, venv_name)
   return function(client)
       client.config.settings.python.pythonPath = get_python_path(client.config.root_dir, source_strategy, venv_name)
+      M.o.current_venv = client.config.settings.python.pythonPath
     end
+end
+
+local function run(venv_name)
+
+  -- Setup server opts passed to language server
+  M["server_opts"] = {
+    on_init = on_init(o.get().source_strategy, venv_name),
+    on_attach = o.get().on_attach,
+    -- TODO: Can both on_init and before_init be used?
+    before_init = o.get().on_init
+  }
+
+  nvim_lsp.pyright.setup(M.server_opts)
 end
 
 local function get_client()
@@ -85,6 +108,12 @@ M.stop_client = function()
   vim.lsp.stop_client(client.id)
 end
 
+M.reload_client = function()
+  local client = get_client()
+  vim.lsp.stop_client(client.id)
+  run(M.current_venv)
+end
+
 M.activate_venv = function (venv_name)
   local current_client = get_client()
   local cwd = vim.fn["getcwd"]()
@@ -98,11 +127,7 @@ M.activate_venv = function (venv_name)
       vim.lsp.stop_client(current_client.id)
     end
 
-    M.setup { venv_name = venv_name }
-    -- local current_buffer = vim.get_bufnr()
-
-    -- local current_buffer = vim.fn["bufnr"]()
-    -- vim.lsp.buf_attach_client(current_buffer, get_client().id)
+    run(venv_name)
     print("Activated venv")
   else
     print("Cannot find venv")
@@ -110,29 +135,74 @@ M.activate_venv = function (venv_name)
   end
 end
 
+M.create_venv = function (venv_name)
+
+  local python = o.get().host_python
+
+  if not python then
+    print("No python host configured")
+  end
+
+  venv_name  = venv_name or "venv"
+
+  local output = vim.fn.trim(vim.fn.system(format("%s -m virtualenv %s", python, venv_name)))
+  print(output)
+  run(venv_name)
+end
+
+M.create_popup = function()
+
+  local win, buf = popup.make_popup()
+
+  M.popup_win = win
+
+  local lines = popup.format_lines(vim.tbl_values(c.commands_to_text))
+
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+
+  vim.api.nvim_buf_set_keymap(
+     buf, 'n', '<CR>', ":lua require('py_lsp').execute_command() <CR>",
+      { nowait = true, noremap = true, silent = true }
+  )
+  vim.api.nvim_win_set_option(win, 'cursorline', true)
+end
+
+M.execute_command = function ()
+    local pos = vim.api.nvim_win_get_cursor(M.popup_win)
+    local row = pos[1]
+    local line = vim.tbl_values(c.commands_to_text)[row]
+    local command = u.get_key_for_value(c.commands_to_text, line)
+    M[c.commands[command]]()
+
+    -- Close window and open new buffer with target file
+    vim.api.nvim_win_close(M.pop_window, true)
+end
+
+M.py_run = function (...)
+  local args = { ... }
+  args = table.concat(args, " ")
+  local client = get_client()
+
+  local py_path = client.config.settings.python.pythonPath
+
+  print(vim.fn.system(format("%s %s", py_path, args)))
+end
+
 M.setup = function (opts)
 
-  u.define_command("PyLspCurrentVenv", "print_venv")
-  u.define_command("PyLspActivateVenv", "activate_venv")
-  u.define_command("PyLspDeactivateVenv", "stop_client")
+  -- Init all commands
+  for command, func in pairs(c.commands) do
+    u.define_command(command, func)
+  end
 
   -- Collect all opts from defaults and user
   opts = opts or {}
   o.set(opts)
 
-  -- Setup server opts passed to language server
-  M["server_opts"] = {
-    on_init = on_init(o.get().source_strategy, opts.venv_name),
-    on_attach = o.get().on_attach,
-    -- TODO: Can both on_init and before_init be used?
-    before_init = o.get().on_init
-  }
-
   if o.get().auto_source then
-    nvim_lsp.pyright.setup(M.server_opts)
+    run(opts.venv_name)
   end
-  
-  o.set({ auto_source = false })
+
 end
 
 return M

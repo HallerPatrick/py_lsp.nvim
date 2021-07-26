@@ -1,48 +1,76 @@
 # py_lsp.nvim
 
+## What is py_lsp?
 
-This plugin is created due to following [Issue](https://github.com/neovim/nvim-lspconfig/issues/500#issuecomment-877305226).
-It tackles the issues about the activation and usage of python virtualenv
+`py_lsp.nvim` is a neovim plugin that helps with using the [lsp](https://neovim.io/doc/user/lsp.html) feature for python development.
+
+It tackles the problem about the activation and usage of python virtual environments
 for the nvim lsp. 
 
-Is serves as a starter to make virtualenv usage more easier and transparent.
 
-This plugin currently includes a utility to automatically pass a virtualenv to
-the pyright lsp server before initialization also take from the [Issue](https://github.com/neovim/nvim-lspconfig/issues/500#issuecomment-851247107). 
-(Thanks [lithammer](https://github.com/lithammer) and others).
+## Installation
 
-
-#### WARNING: This is in a early stage. The API will change!
-
-
-This can be done as following:
-
+Using [vim-plug](https://github.com/junegunn/vim-plug):
 
 ```viml
-" Use your plugin manager of choice
 Plug 'HallerPatrick/py_lsp.nvim'
 ```
 
+Using [packer.nvim](https://github.com/wbthomason/packer.nvim):
+
 ```lua
-require'py_lsp'.setup()
+use 'HallerPatrick/py_lsp.nvim'
 ```
 
 
-## Features
+## Usage
 
-Get current venv used
+Instead of initializing the server on your own, like in [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig#quickstart),
+`py_lsp` is doing that for you.
 
-`:PyLspCurrentVenv`
 
-Deactivate current venv, which means shutting down the lsp server
+Put this in your `init.lua` (or wrap in lua call for your `init.vim`)
 
-`:PyLspDeactiveVenv`
+```lua
+require'py_lsp'.setup {
+  -- This is optional, but allows to create virtual envs from nvim
+  host_python = "/path/to/python/bin"
+}
+```
 
-Activate venv, optional accepts a venv to choose from, which is in the current workspace
+This minimal setup will automatically pass a python virtual environment path
+to the LSP client for completion/linting.
 
-`:PyLspActivateVenv <venv_name>`
+### Features
+
+`py_lsp` exposes several commands that help with a virtual env workflow.
+
+| Command              | Parameter | Usage                                                                                                                     |
+| ----                 | ----      | ----                                                                                                                      |
+| `:PyLspCurrentVenv`  | No        | Prints the currently used python venv                                                                                     |
+| `:PyLspDeactiveVenv` | No        | Shuts down the current LSP client                                                                                         |
+| `:PyLspReload`       | No        | Reload LSP client with current python venv                                                                                |
+| `:PyLspActivateVenv` | venv name | Activates a virtual env with given name (default: 'venv'). This venv should lie in project root                           |
+| `:PyLspCreateVenv`   | venv name | Creates a virtual env with given name (default: 'venv'). Requires `host_python` to be set and have `virtualenv` installed |
+| `:PyRun`             | command   | Run files and modules from current virtuale env                                                                           |
+
+
+
+
+#### Example Workflow
+
+You open up your python project. Because there is no python virtual env confirgured, the LSP is not starting.
+
+1. You run `:PyLspCreateVenv venv` to create a new virtual env from `host_python`.
+2. You run `:PyLspCurrentVenv` to check if the LSP client is using your new venv.
+3. You run `:PyRun -m pip install -r requirements.txt` to install project dependencies.
+4. You run `:PyLspReload` so that the LSP client also find your new site-packages for autocompletion and correct linting.
+
+You start programming!
 
 ### Configuration
+
+The configurations are not sensible yet, and are suiting my setup. This will change.
 
 Default:
 
@@ -56,16 +84,9 @@ Default Values:
 
 ## Note
 
-This is by no way complete and supports only standard virtualenvs with a `pyvenv.cfg` file
-somewhere in the cwd.
+This plugin is created due to following [Issue](https://github.com/neovim/nvim-lspconfig/issues/500#issuecomment-877305226).
 
-## TODOs
+This plugin currently includes a utility to automatically pass a virtualenv to
+the pyright lsp server before initialization also take from the [Issue](https://github.com/neovim/nvim-lspconfig/issues/500#issuecomment-851247107). 
+(Thanks [lithammer](https://github.com/lithammer) and others).
 
-- [ ] Allow for configuration of plugin
-    - [ ] Order on which to look for venv
-    - [ ] Disable auto sourcing
-- [ ] Allow for non local venvs to be used
-- [x] Allow tools like poetry to be used
-- [ ] Nice TUI for some more information (current activate venv etc)
-- [ ] Support for statuslines to expose current venv name
-- [ ] Allow for runnables
