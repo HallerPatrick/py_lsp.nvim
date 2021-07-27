@@ -130,3 +130,4 @@ This plugin currently includes a utility to automatically pass a virtualenv to
 the pyright lsp server before initialization also take from the [Issue](https://github.com/neovim/nvim-lspconfig/issues/500#issuecomment-851247107). 
 (Thanks [lithammer](https://github.com/lithammer) and others).
 
+
