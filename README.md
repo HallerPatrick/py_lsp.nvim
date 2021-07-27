@@ -68,6 +68,39 @@ You open up your python project. Because there is no python virtual env confirgu
 
 You start programming!
 
+### Extras
+
+The virtual environment path and name can be retrieved with `client.config.settings.python.pythonPath` and `client.config.settings.python.venv_name`. This can be used in your e.g. your statuslines.
+
+Example provider for [feline](https://github.com/famiu/feline.nvim):
+
+```lua
+local function lsp_provider(component)
+
+    local clients = {}
+    local icon = component.icon or ' '
+
+    for _, client in pairs(vim.lsp.buf_get_clients()) do
+        if client.name == "pyright" then
+          -- Check if lsp was initialized with py_lsp
+          if client.config.settings.python["pythonPath"] ~= nil then
+            local venv_name = client.config.settings.python.venv_name
+            clients[#clients+1] = icon .. client.name .. '('.. venv_name .. ')'
+          end
+        else
+          clients[#clients+1] = icon .. client.name
+        end
+    end
+
+    return table.concat(clients, ' ')
+end
+```
+
+This will give you a VSCode like status:
+
+![Statusline with LSP server and venv name](./statusline_venv_name.png)
+
+
 ### Configuration
 
 The configurations are not sensible yet, and are suiting my setup. This will change.
@@ -82,6 +115,13 @@ Default Values:
     source_strategy = {"default", "poetry", "system"}
 ```
 
+## Todo
+
+* Support for different environment systems:
+    * virtualenvwrapper
+    * Conda
+    * Pipenv
+    
 ## Note
 
 This plugin is created due to following [Issue](https://github.com/neovim/nvim-lspconfig/issues/500#issuecomment-877305226).

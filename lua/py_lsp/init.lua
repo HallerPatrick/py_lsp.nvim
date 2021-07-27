@@ -4,7 +4,6 @@ local popups = require('popup')
 local o = require('py_lsp.options')
 local u = require('py_lsp.utils')
 local c = require('py_lsp.commands')
-local popup = require('py_lsp.popup')
 
 
 local path = util.path
@@ -13,7 +12,8 @@ local format = string.format
 local M = {}
 
 M.o = {
-  current_venv = nil
+  current_venv = nil,
+  venv_name = nil
 }
 
 local function get_python_path(workspace, source_strategy, venv_name)
@@ -61,6 +61,7 @@ local function on_init(source_strategy, venv_name)
   return function(client)
       client.config.settings.python.pythonPath = get_python_path(client.config.root_dir, source_strategy, venv_name)
       M.o.current_venv = client.config.settings.python.pythonPath
+      client.config.settings.python.venv_name = u.get_python_venv_name(M.o.current_venv)
     end
 end
 
