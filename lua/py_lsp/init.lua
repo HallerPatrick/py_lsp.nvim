@@ -1,6 +1,6 @@
 local nvim_lsp = require("lspconfig")
 local util = require("lspconfig/util")
-local popups = require("popup")
+local popup = require("py_lsp.popup")
 local o = require("py_lsp.options")
 local u = require("py_lsp.utils")
 local c = require("py_lsp.commands")
