@@ -2,7 +2,7 @@ local api = vim.api
 
 local M = {}
 
-M.make_popup = function()
+M.make_popup_window = function()
 	local buf = api.nvim_create_buf(false, true) -- create new emtpy buffer
 
 	api.nvim_buf_set_option(buf, "bufhidden", "wipe")
@@ -63,6 +63,38 @@ M.format_lines = function(lines)
 	end
 
 	return lines
+end
+
+M.create_popup = function(list, callback)
+	local win, buf = M.make_popup_window()
+
+	M.popup_win = win
+
+	local lines = M.format_lines(list)
+
+	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+	vim.api.nvim_win_set_option(win, "cursorline", true)
+
+	vim.api.nvim_buf_set_keymap(
+		buf,
+		"n",
+		"<CR>",
+		":lua require('py_lsp.popup').execute_command() <CR>",
+		{ nowait = true, noremap = true, silent = true }
+	)
+
+	-- Save callback so it can be called in execute_commnad
+	M.popup_callback = callback
+end
+
+M.execute_command = function()
+	local pos = vim.api.nvim_win_get_cursor(M.popup_win)
+	local row = pos[1]
+
+	M.popup_callback(row)
+
+	-- Close window
+	vim.api.nvim_win_close(M.pop_window, true)
 end
 
 return M

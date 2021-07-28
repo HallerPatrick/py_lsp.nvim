@@ -112,7 +112,7 @@ Default Values:
     auto_source = true,
     language_server = "pyright",
     on_attach = require'completion'.on_attach,
-    source_strategy = {"default", "poetry", "system"}
+    source_strategies = {"default", "poetry", "system"}
 ```
 
 ## Todo
@@ -123,6 +123,9 @@ Default Values:
     * Pipenv
     
 ## Note
+
+All features are currently only available with `pyright`. `pylsp` is weird. It will still be started,
+but all features are run with a 'pyright' server or not at all.
 
 This plugin is created due to following [Issue](https://github.com/neovim/nvim-lspconfig/issues/500#issuecomment-877305226).
 
