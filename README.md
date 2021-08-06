@@ -5,7 +5,7 @@
 `py_lsp.nvim` is a neovim plugin that helps with using the [lsp](https://neovim.io/doc/user/lsp.html) feature for python development.
 
 It tackles the problem about the activation and usage of python virtual environments
-for the nvim lsp. 
+for the nvim lsp.
 
 
 ## Installation
@@ -13,13 +13,17 @@ for the nvim lsp.
 Using [vim-plug](https://github.com/junegunn/vim-plug):
 
 ```viml
+Plug 'nvim-lua/completion.nvim'
 Plug 'HallerPatrick/py_lsp.nvim'
 ```
 
 Using [packer.nvim](https://github.com/wbthomason/packer.nvim):
 
 ```lua
-use 'HallerPatrick/py_lsp.nvim'
+use {
+    'HallerPatrick/py_lsp.nvim',
+    requires = {'nvim-lua/completion.nvim'}
+}
 ```
 
 
@@ -121,7 +125,7 @@ Default Values:
     * virtualenvwrapper
     * Conda
     * Pipenv
-    
+
 ## Note
 
 All features are currently only available with `pyright`. `pylsp` is weird. It will still be started,
@@ -130,7 +134,7 @@ but all features are run with a 'pyright' server or not at all.
 This plugin is created due to following [Issue](https://github.com/neovim/nvim-lspconfig/issues/500#issuecomment-877305226).
 
 This plugin currently includes a utility to automatically pass a virtualenv to
-the pyright lsp server before initialization also take from the [Issue](https://github.com/neovim/nvim-lspconfig/issues/500#issuecomment-851247107). 
+the pyright lsp server before initialization also take from the [Issue](https://github.com/neovim/nvim-lspconfig/issues/500#issuecomment-851247107).
 (Thanks [lithammer](https://github.com/lithammer) and others).
 
 
