@@ -13,7 +13,7 @@ for the nvim lsp.
 Using [vim-plug](https://github.com/junegunn/vim-plug):
 
 ```viml
-Plug 'nvim-lua/completion.nvim'
+Plug 'nvim-lua/completion-nvim'
 Plug 'HallerPatrick/py_lsp.nvim'
 ```
 
@@ -22,7 +22,7 @@ Using [packer.nvim](https://github.com/wbthomason/packer.nvim):
 ```lua
 use {
     'HallerPatrick/py_lsp.nvim',
-    requires = {'nvim-lua/completion.nvim'}
+    requires = {'nvim-lua/completion-nvim'}
 }
 ```
 
