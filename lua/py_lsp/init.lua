@@ -52,8 +52,23 @@ local function run(venv_name)
 		on_attach = o.get().on_attach,
 	}
 
+    local server_opts = M.server_opts
+
+    -- If pyright lang server is installed thrugh LspInstall, we pass "python"
+    -- as the language server, because "python" is pre configured with the
+    -- binary path
+    if u.has_lsp_installed_server() and o.get().language_server == "pyright" then
+        -- server_opts["document_config"] = nvim_lsp["python"]["document_config"]
+
+        local configs = require("lspconfig/configs")
+
+        -- Inject binary path from LspInstall setup into setup configs for lspconfig
+        -- Feels a bit hacky
+        server_opts["cmd"] = configs["python"]["document_config"]["default_config"]["cmd"]
+    end
+
 	-- Start LSP
-	nvim_lsp[o.get().language_server].setup(M.server_opts)
+	nvim_lsp[o.get().language_server].setup(server_opts)
 end
 
 M.get_client = function()
