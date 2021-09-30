@@ -2,6 +2,7 @@ local defaults = {
     auto_source = true,
     language_server = "pyright",
     on_attach = nil,
+    capabilities = nil,
     source_strategies = {"default", "poetry", "system"},
     host_python = nil, -- this python should include the virtualenv module
 }

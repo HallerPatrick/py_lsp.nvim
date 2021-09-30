@@ -46,9 +46,14 @@ local function on_init(source_strategies, venv_name)
 end
 
 local function run(venv_name)
+    -- Prepare capabilities if not specified in options
+    local capabilities = o.get().capabilities
+    if capabilities == nil then capabilities = vim.lsp.protocol.make_client_capabilities() end
+
 	-- Setup server opts passed to language server
 	M["server_opts"] = {
 		on_init = on_init(o.get().source_strategies, venv_name),
+        capabilities = capabilities,
 		on_attach = o.get().on_attach,
 	}
 
