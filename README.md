@@ -70,7 +70,7 @@ You start programming!
 
 ### Extras
 
-The virtual environment path and name can be retrieved with `client.config.settings.python.pythonPath` and `client.config.settings.python.venv_name`. This can be used in your e.g. your statuslines.
+The virtual environment path and name can be retrieved with `client.config.settings.python.pythonPath` and `client.config.settings.python.venv_name`. This can for example be used in your statuslines.
 
 Example provider for [feline](https://github.com/famiu/feline.nvim):
 
@@ -124,10 +124,13 @@ Default Values:
     * Conda
     * Pipenv
 
-## Note
+## Limitations
 
-All features are currently only available with `pyright`. `pylsp` is weird. It will still be started,
+* All features are currently only available with `pyright`. `pylsp` is weird. It will still be started, 
 but all features are run with a 'pyright' server or not at all.
+* `py_lsp` expects to find virtualenv in the `cwd`, please check for that
+
+## Note
 
 This plugin is created due to following [Issue](https://github.com/neovim/nvim-lspconfig/issues/500#issuecomment-877305226).
 
