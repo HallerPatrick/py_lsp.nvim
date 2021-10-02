@@ -112,7 +112,9 @@ Default Values:
     auto_source = true,
     language_server = "pyright",
     on_attach = nil,
-    source_strategies = {"default", "poetry", "system"}
+    source_strategies = {"default", "poetry", "system"},
+    capabilities = nil,
+    host_python = nil
 ```
 
 ## Todo
