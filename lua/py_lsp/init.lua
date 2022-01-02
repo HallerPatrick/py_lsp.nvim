@@ -43,6 +43,12 @@ local function on_init(source_strategies, venv_name)
 
         -- For display
         client.config.settings.python.venv_name = u.get_python_venv_name(python_path)
+
+        vim.notify(
+            "Using python virtual environment:\n" .. client.config.settings.python.pythonPath,
+            "info", {
+                title = "py_lsp.nvim"
+            })
     end
 end
 
@@ -76,6 +82,7 @@ local function run(venv_name)
     -- print(vim.inspect(server_opts))
     -- Start LSP
     nvim_lsp[o.get().language_server].setup(server_opts)
+
 end
 
 M.get_client = function() return lsp.get_client(o.get().language_server) end

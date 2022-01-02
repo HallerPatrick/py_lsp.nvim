@@ -23,7 +23,7 @@ M.get_python_venv_name = function(venv_path)
     return string.gsub(venv_path, "/bin/python", "")
 end
 
-local is_module_available = function(name)
+M.is_module_available = function(name)
     if package.loaded[name] then
         return true
     else
@@ -39,7 +39,7 @@ local is_module_available = function(name)
 end
 
 M.has_lsp_installed_server = function()
-    if is_module_available("lspinstall") then
+    if M.is_module_available("lspinstall") then
         local servers = require'lspinstall'.installed_servers()
 
         if vim.tbl_contains(servers, "python") then return true end
