@@ -1,5 +1,7 @@
 local M = {}
 
+M.allowed_clients = {"pyright", "jedi-language-server"}
+
 M.get_client = function(lsp_server_name)
     local clients = vim.lsp.get_active_clients()
 
@@ -11,7 +13,9 @@ M.get_client = function(lsp_server_name)
     local current_client = nil
 
     for _, client in ipairs(clients) do
-        if client ~= nil and client.name == "pyright" then current_client = client end
+        if client ~= nil and vim.tbl_contains(M.allowed_clients, client.name) then
+            current_client = client
+        end
     end
     return current_client
 end

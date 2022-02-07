@@ -24,6 +24,17 @@ local function on_init(source_strategies, venv_name)
             py.find_python_path(client.config.root_dir, source_strategies, venv_name)
 
         -- Pass to lsp
+        --
+        -- TODO: Depends on lsp in use, maybe change this
+        if o.get().language_server == "pyright" then
+            client.config.settings.python.pythonPath = python_path
+        else
+            client.config.settings = {
+                python = {
+                    pythonPath = python_path
+                }
+            }
+        end
         client.config.settings.python.pythonPath = python_path
         -- local message = {
         -- 	pylsp = {
@@ -44,11 +55,13 @@ local function on_init(source_strategies, venv_name)
         -- For display
         client.config.settings.python.venv_name = u.get_python_venv_name(python_path)
 
-        vim.notify(
-            "Using python virtual environment:\n" .. client.config.settings.python.pythonPath,
-            "info", {
+        if u.is_module_available("notify") then
+
+            require("notify").notify("Using python virtual environment:\n" ..
+                                         client.config.settings.python.pythonPath, "info", {
                 title = "py_lsp.nvim"
             })
+        end
     end
 end
 
@@ -69,7 +82,8 @@ local function run(venv_name)
     -- If pyright lang server is installed thrugh LspInstall, we pass "python"
     -- as the language server, because "python" is pre configured with the
     -- binary path
-    if u.has_lsp_installed_server() and o.get().language_server == "pyright" then
+    if u.has_lsp_installed_server() and
+        vim.tbl_contains(lsp.allowed_clients, o.get().language_server) then
         -- server_opts["document_config"] = nvim_lsp["python"]["document_config"]
 
         local configs = require("lspconfig/configs")
@@ -82,7 +96,6 @@ local function run(venv_name)
     -- print(vim.inspect(server_opts))
     -- Start LSP
     nvim_lsp[o.get().language_server].setup(server_opts)
-
 end
 
 M.get_client = function() return lsp.get_client(o.get().language_server) end
