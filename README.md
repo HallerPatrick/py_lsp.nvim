@@ -7,7 +7,6 @@
 It tackles the problem about the activation and usage of python virtual environments
 for the nvim lsp.
 
-
 ## Installation
 
 Using [vim-plug](https://github.com/junegunn/vim-plug):
@@ -22,12 +21,10 @@ Using [packer.nvim](https://github.com/wbthomason/packer.nvim):
 use {'HallerPatrick/py_lsp.nvim'}
 ```
 
-
 ## Usage
 
 Instead of initializing the server on your own, like in [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig#quickstart),
 `py_lsp` is doing that for you.
-
 
 Put this in your `init.lua` (or wrap in lua call for your `init.vim`)
 
@@ -46,7 +43,7 @@ to the LSP client for completion/linting.
 `py_lsp` exposes several commands that help with a virtual env workflow.
 
 | Command              | Parameter | Usage                                                                                                                     |
-| ----                 | ----      | ----                                                                                                                      |
+| -------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------- |
 | `:PyLspCurrentVenv`  | No        | Prints the currently used python venv                                                                                     |
 | `:PyLspDeactiveVenv` | No        | Shuts down the current LSP client                                                                                         |
 | `:PyLspReload`       | No        | Reload LSP client with current python venv                                                                                |
@@ -55,7 +52,6 @@ to the LSP client for completion/linting.
 | `:PyRun`             | command   | Run files and modules from current virtuale env                                                                           |
 
 Most of these commands can be also run over a popup menu with `:PyLspPopup`.
-
 
 #### Example Workflow
 
@@ -100,7 +96,6 @@ This will give you a VSCode like status:
 
 ![Statusline with LSP server and venv name](./statusline_venv_name.png)
 
-
 ### Configuration
 
 The configurations are not sensible yet, and are suiting my setup. This will change.
@@ -117,18 +112,49 @@ Default Values:
     host_python = nil
 ```
 
+## Other Language servers
+
+I am using `pyright` and therefore works well with `pyright`. When using a not registered language server
+like `jedi-language-server` you can register it like following:
+
+```lua
+local nvim_lsp_configs = require "lspconfig.configs"
+
+nvim_lsp_configs["jedi_language_server"] = {
+    default_config = {
+        cmd = {"jedi-language-server"},
+
+        -- Depending on your environment
+        root_dir = nvim_lsp.util.root_pattern(".git", "setup.py",
+                                              "pyproject.toml"),
+        filetypes = {"python"}
+    }
+}
+
+local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp
+                                                                     .protocol
+                                                                     .make_client_capabilities())
+
+require("py_lsp").setup({
+    language_server = "jedi_language_server",
+    capabilities = capabilities
+})
+
+
+```
+
 ## Todo
 
-* Support for different environment systems:
-    * virtualenvwrapper
-    * Conda
-    * Pipenv
+- Support for different environment systems:
+  - virtualenvwrapper
+  - Conda
+  - Pipenv
 
 ## Limitations
 
-* All features are currently only available with `pyright`. `pylsp` is weird. It will still be started, 
-but all features are run with a 'pyright' server or not at all.
-* `py_lsp` expects to find virtualenv in the `cwd`, please check for that
+- All features are currently only available with `pyright` and `jedi-language-server`. `pylsp` is weird. It will still be started,
+  but all features are run with a 'pyright' server or not at all.
+- `py_lsp` expects to find virtualenv in the `cwd`, please check for that
 
 ## Note
 
@@ -137,5 +163,3 @@ This plugin is created due to following [Issue](https://github.com/neovim/nvim-l
 This plugin currently includes a utility to automatically pass a virtualenv to
 the pyright lsp server before initialization also take from the [Issue](https://github.com/neovim/nvim-lspconfig/issues/500#issuecomment-851247107).
 (Thanks [lithammer](https://github.com/lithammer) and others).
-
-
