@@ -22,6 +22,7 @@ M.poetry = function(workspace, _)
     -- If no standard venv found look for poetry
     local match = vim.fn.glob(path.join(workspace, "poetry.lock"))
 
+    -- TODO: This could throw errors, should be handled
     if match ~= "" then
         local venv = vim.fn.trim(vim.fn.system("poetry env info -p"))
         return path.join(venv, "bin", "python")

@@ -35,19 +35,8 @@ local function on_init(source_strategies, venv_name)
                 }
             }
         end
-        client.config.settings.python.pythonPath = python_path
-        -- local message = {
-        -- 	pylsp = {
-        -- 		plugins = {
-        -- 			jedi = {
-        -- 				environment = "venv/bin/python",
-        -- 			},
-        -- 		},
-        -- 	},
-        -- }
 
-        -- local resp = client.notify("workspace/didChangeConfiguration", {settings = message})
-        -- client.config.settings = message
+        client.config.settings.python.pythonPath = python_path
 
         -- Cache to reload lsp
         M.o.current_venv = python_path
@@ -59,7 +48,8 @@ local function on_init(source_strategies, venv_name)
 
             require("notify").notify("Using python virtual environment:\n" ..
                                          client.config.settings.python.pythonPath, "info", {
-                title = "py_lsp.nvim"
+                title = "py_lsp.nvim",
+                timeout = 500
             })
         end
     end
@@ -170,6 +160,12 @@ M.py_run = function(...)
 
     local py_path = client.config.settings.python.pythonPath
 
+    -- TODO: Make this work
+    -- if u.is_module_available("asyncrun") then
+    --     vim.cmd("AsynRun echo 'Hello World'")
+    -- else
+    --     print(vim.fn.system(format("%s %s", py_path, args)))
+    -- end
     print(vim.fn.system(format("%s %s", py_path, args)))
 end
 

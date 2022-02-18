@@ -18,6 +18,7 @@ M.commands_to_text = {
     PyLspActivateVenv = "Activate venv (default name: 'venv')",
     PyLspDeactivateVenv = "Stop current running LSP client",
     PyLspCreateVenv = "Create a venv in project directory (default name: 'venv')"
+    -- PyRun = "Run python commands with current virtual env"
 }
 
 return M
