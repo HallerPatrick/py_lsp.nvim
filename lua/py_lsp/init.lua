@@ -36,8 +36,6 @@ local function on_init(source_strategies, venv_name)
             }
         end
 
-        client.config.settings.python.pythonPath = python_path
-
         -- Cache to reload lsp
         M.o.current_venv = python_path
 
@@ -69,21 +67,33 @@ local function run(venv_name)
 
     local server_opts = M.server_opts
 
-    -- If pyright lang server is installed thrugh LspInstall, we pass "python"
-    -- as the language server, because "python" is pre configured with the
-    -- binary path
-    if u.has_lsp_installed_server() and
+    -- Check weather the lsp server is installed with `nvim-lsp-installer`
+    if u.has_lsp_installed_server(o.get().language_server) and
         vim.tbl_contains(lsp.allowed_clients, o.get().language_server) then
-        -- server_opts["document_config"] = nvim_lsp["python"]["document_config"]
 
-        local configs = require("lspconfig/configs")
+        -- Get call command of lang server
+        local cmd =
+            require("lspconfig")[o.get().language_server]["document_config"]["default_config"]["cmd"]
+
+        -- Get specific language server configs
+        local has_server, servers = require("nvim-lsp-installer/servers").get_server(o.get()
+                                                                                         .language_server)
 
         -- Inject binary path from LspInstall setup into setup configs for lspconfig
         -- Feels a bit hacky
-        server_opts["cmd"] = configs["python"]["document_config"]["default_config"]["cmd"]
+        if has_server then
+            local root_dir = servers["root_dir"]
+
+            if o.get().language_server == "pyright" then
+                local bin_path = root_dir .. "/node_modules/.bin/" .. table.concat(cmd, " ")
+                server_opts["cmd"] = u.split_string(bin_path, " ")
+            else
+                print(
+                    "For now only pyright is properly supported when installed with the nvim-lsp-installer.")
+            end
+        end
     end
 
-    -- print(vim.inspect(server_opts))
     -- Start LSP
     nvim_lsp[o.get().language_server].setup(server_opts)
 end

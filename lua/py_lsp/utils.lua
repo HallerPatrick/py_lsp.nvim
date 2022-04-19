@@ -38,13 +38,20 @@ M.is_module_available = function(name)
     end
 end
 
-M.has_lsp_installed_server = function()
-    if M.is_module_available("lspinstall") then
-        local servers = require'lspinstall'.installed_servers()
-
-        if vim.tbl_contains(servers, "python") then return true end
+M.has_lsp_installed_server = function(server_name)
+    if M.is_module_available("nvim-lsp-installer") then
+        local servers = require'nvim-lsp-installer/servers'.get_installed_server_names()
+        if vim.tbl_contains(servers, server_name) then return true end
     end
     return false
+end
+
+M.split_string = function(s, delimiter)
+    local result = {}
+    for match in (s..delimiter):gmatch("(.-)"..delimiter) do
+        table.insert(result, match)
+    end
+    return result;
 end
 
 return M
