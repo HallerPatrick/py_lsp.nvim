@@ -36,6 +36,8 @@ local function on_init(source_strategies, venv_name)
             }
         end
 
+        print("This is not called?")
+
         -- Cache to reload lsp
         M.o.current_venv = python_path
 
@@ -94,11 +96,12 @@ local function run(venv_name)
         end
     end
 
+    print("but you are")
     -- Start LSP
     nvim_lsp[o.get().language_server].setup(server_opts)
 end
 
-M.get_client = function() return lsp.get_client(o.get().language_server) end
+M.get_client = function() return lsp.get_client() end
 
 M.print_venv = function()
     local client = M.get_client()

@@ -2,7 +2,7 @@ local M = {}
 
 M.allowed_clients = {"pyright", "jedi-language-server"}
 
-M.get_client = function(lsp_server_name)
+M.get_client = function()
     local clients = vim.lsp.get_active_clients()
 
     if clients == nil or clients == {} then
