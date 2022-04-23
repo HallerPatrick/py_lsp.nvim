@@ -38,6 +38,9 @@ require'py_lsp'.setup {
 This minimal setup will automatically pass a python virtual environment path
 to the LSP client for completion/linting.
 
+WARNING: `py_lsp` is currently not agnostic against other python lsp servers that are starting or attaching.
+Please be aware of other plugins, autostarting lsp servers.
+
 ### Features
 
 `py_lsp` exposes several commands that help with a virtual env workflow.
@@ -149,6 +152,7 @@ require("py_lsp").setup({
   - virtualenvwrapper
   - Conda
   - Pipenv
+- Agnostic against other python lsp server
 
 ## Limitations
 

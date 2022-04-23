@@ -36,8 +36,6 @@ local function on_init(source_strategies, venv_name)
             }
         end
 
-        print("This is not called?")
-
         -- Cache to reload lsp
         M.o.current_venv = python_path
 
@@ -55,7 +53,7 @@ local function on_init(source_strategies, venv_name)
     end
 end
 
-local function run(venv_name)
+local function run_lsp_server(venv_name)
     -- Prepare capabilities if not specified in options
     local capabilities = o.get().capabilities
     if capabilities == nil then capabilities = vim.lsp.protocol.make_client_capabilities() end
@@ -84,9 +82,11 @@ local function run(venv_name)
         -- Inject binary path from LspInstall setup into setup configs for lspconfig
         -- Feels a bit hacky
         if has_server then
+
             local root_dir = servers["root_dir"]
 
             if o.get().language_server == "pyright" then
+                -- local bin_path = root_dir .. "/node_modules/.bin/pyright-langserver" -- .. table.concat(cmd, " ")
                 local bin_path = root_dir .. "/node_modules/.bin/" .. table.concat(cmd, " ")
                 server_opts["cmd"] = u.split_string(bin_path, " ")
             else
@@ -96,9 +96,8 @@ local function run(venv_name)
         end
     end
 
-    print("but you are")
     -- Start LSP
-    nvim_lsp[o.get().language_server].setup(server_opts)
+     nvim_lsp[o.get().language_server].setup(server_opts)
 end
 
 M.get_client = function() return lsp.get_client() end
@@ -121,7 +120,7 @@ end
 M.reload_client = function()
     local client = M.get_client()
     vim.lsp.stop_client(client.id)
-    run(M.current_venv)
+    run_lsp_server(M.current_venv)
 end
 
 M.activate_venv = function(venv_name)
@@ -136,7 +135,7 @@ M.activate_venv = function(venv_name)
             vim.lsp.stop_client(current_client.id)
         end
 
-        run(venv_name)
+        run_lsp_server(venv_name)
         print("Activated venv")
     else
         print("Cannot find venv")
@@ -152,7 +151,7 @@ M.create_venv = function(venv_name)
 
     local output = vim.fn.trim(vim.fn.system(format("%s -m virtualenv %s", python, venv_name)))
     print(output)
-    run(venv_name)
+    run_lsp_server(venv_name)
 end
 
 M.create_popup = function()
@@ -190,7 +189,8 @@ M.setup = function(opts)
     opts = opts or {}
     o.set(opts)
 
-    if o.get().auto_source then run(opts.venv_name) end
+    -- Only activate venv if auto_source is true
+    if o.get().auto_source then run_lsp_server(opts.venv_name) end
 end
 
 return M
