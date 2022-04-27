@@ -42,9 +42,10 @@ local function on_init(source_strategies, venv_name)
         -- For display
         client.config.settings.python.venv_name = u.get_python_venv_name(python_path)
 
-        if u.is_module_available("notify") then
+        local ok, notify = pcall(require, "notify")
 
-            require("notify").notify("Using python virtual environment:\n" ..
+        if ok then
+            notify.notify("Using python virtual environment:\n" ..
                                          client.config.settings.python.pythonPath, "info", {
                 title = "py_lsp.nvim",
                 timeout = 500
@@ -97,7 +98,7 @@ local function run_lsp_server(venv_name)
     end
 
     -- Start LSP
-     nvim_lsp[o.get().language_server].setup(server_opts)
+    nvim_lsp[o.get().language_server].setup(server_opts)
 end
 
 M.get_client = function() return lsp.get_client() end
@@ -163,6 +164,36 @@ M.create_popup = function()
         M[c.commands[command]]()
     end)
 end
+--
+-- local pickers = require "telescope.pickers"
+-- local finders = require "telescope.finders"
+-- local conf = require("telescope.config").values
+-- local actions = require "telescope.actions"
+-- local action_state = require "telescope.actions.state"
+
+-- M.create_popup = function(opts)
+--     opts = opts or {}
+--
+--     local func
+--
+--     pickers.new(opts, {
+--         prompt_title = "py_lsp.nvim actions",
+--         finder = finders.new_table {
+--             results = vim.tbl_values(c.commands_to_text)
+--         },
+--         sorter = conf.generic_sorter(opts),
+--         attach_mappings = function(prompt_bufnr, map)
+--             actions.select_default:replace(function()
+--                 actions.close(prompt_bufnr)
+--                 local selection = action_state.get_selected_entry()
+--                 func = vim.tbl_values(c.commands)[selection.index]
+--             end)
+--             return true
+--         end
+--     }):find()
+--
+--     M[func]()
+-- end
 
 M.py_run = function(...)
     local args = {...}
@@ -183,7 +214,15 @@ end
 
 M.setup = function(opts)
     -- Init all commands
-    for command, func in pairs(c.commands) do u.define_command(command, func) end
+    for command, func in pairs(c.commands) do
+      vim.api.nvim_create_user_command(
+        command,
+        M[func],
+        {desc=c.commands_to_text[command]}
+      )
+    end
+
+    -- for command, func in pairs(c.commands) do u.define_command(command, func) end
 
     -- Collect all opts from defaults and user
     opts = opts or {}

@@ -1,10 +1,4 @@
-local format = string.format
-
 local M = {}
-
-M.define_command = function(name, fn)
-    vim.cmd(format("command! -nargs=* %s lua require'py_lsp'.%s(<f-args>)", name, fn))
-end
 
 M.get_key_for_value = function(t, value)
     for k, v in pairs(t) do if v == value then return k end end
@@ -23,24 +17,10 @@ M.get_python_venv_name = function(venv_path)
     return string.gsub(venv_path, "/bin/python", "")
 end
 
-M.is_module_available = function(name)
-    if package.loaded[name] then
-        return true
-    else
-        for _, searcher in ipairs(package.searchers or package.loaders) do
-            local loader = searcher(name)
-            if type(loader) == 'function' then
-                package.preload[name] = loader
-                return true
-            end
-        end
-        return false
-    end
-end
-
 M.has_lsp_installed_server = function(server_name)
-    if M.is_module_available("nvim-lsp-installer") then
-        local servers = require'nvim-lsp-installer/servers'.get_installed_server_names()
+    local ok, nvim_lsp_installer = pcall(require, "nvim-lsp-installer.servers")
+    if ok then
+        local servers = nvim_lsp_installer.get_installed_server_names()
         if vim.tbl_contains(servers, server_name) then return true end
     end
     return false
