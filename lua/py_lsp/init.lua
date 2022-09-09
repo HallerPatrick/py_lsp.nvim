@@ -1,9 +1,9 @@
 local nvim_lsp = require("lspconfig")
 local util = require("lspconfig/util")
 local popup = require("py_lsp.popup")
-local o = require("py_lsp.options")
-local u = require("py_lsp.utils")
-local c = require("py_lsp.commands")
+local option = require("py_lsp.options")
+local utils = require("py_lsp.utils")
+local commands = require("py_lsp.commands")
 local py = require("py_lsp.python")
 local lsp = require("py_lsp.lsp")
 
@@ -12,11 +12,16 @@ local format = string.format
 
 local M = {}
 
-M.o = {
+M.option = {
     current_venv = nil,
     venv_name = nil
 }
 
+---Main callback funciton that is passed to lsp config
+---
+---@param source_strategies string Strategy used for finding venv
+---@param venv_name string Name of venv
+---@return function on_init callback
 local function on_init(source_strategies, venv_name)
     return function(client)
 
@@ -24,29 +29,26 @@ local function on_init(source_strategies, venv_name)
             py.find_python_path(client.config.root_dir, source_strategies, venv_name)
 
         -- Pass to lsp
-        --
-        -- TODO: Depends on lsp in use, maybe change this
-        if o.get().language_server == "pyright" then
-            client.config.settings.python.pythonPath = python_path
-        else
-            client.config.settings = {
-                python = {
-                    pythonPath = python_path
-                }
-            }
-        end
+        client.config = lsp.update_client_config_python_path(client.config, option.get().language_server,
+                                                             python_path)
 
         -- Cache to reload lsp
-        M.o.current_venv = python_path
+        M.option.current_venv = python_path
+        M.option.venv_name = venv_name
 
         -- For display
-        client.config.settings.python.venv_name = u.get_python_venv_name(python_path)
+        client.config.settings.python.venv_name = utils.get_python_venv_name(python_path)
+
+        -- Callback
+        if option.get().on_server_ready then
+            option.get().on_server_ready(M.option.current_venv, M.option.venv_name)
+        end
 
         local ok, notify = pcall(require, "notify")
 
         if ok then
             notify.notify("Using python virtual environment:\n" ..
-                                         client.config.settings.python.pythonPath, "info", {
+                              client.config.settings.python.pythonPath, "info", {
                 title = "py_lsp.nvim",
                 timeout = 500
             })
@@ -56,28 +58,28 @@ end
 
 local function run_lsp_server(venv_name)
     -- Prepare capabilities if not specified in options
-    local capabilities = o.get().capabilities
+    local capabilities = option.get().capabilities
     if capabilities == nil then capabilities = vim.lsp.protocol.make_client_capabilities() end
 
     -- Setup server opts passed to language server
     M["server_opts"] = {
-        on_init = on_init(o.get().source_strategies, venv_name),
+        on_init = on_init(option.get().source_strategies, venv_name),
         capabilities = capabilities,
-        on_attach = o.get().on_attach
+        on_attach = option.get().on_attach
     }
 
     local server_opts = M.server_opts
 
     -- Check weather the lsp server is installed with `nvim-lsp-installer`
-    if u.has_lsp_installed_server(o.get().language_server) and
-        vim.tbl_contains(lsp.allowed_clients, o.get().language_server) then
+    if utils.has_lsp_installed_server(option.get().language_server) and
+        vim.tbl_contains(lsp.allowed_clients, option.get().language_server) then
 
         -- Get call command of lang server
         local cmd =
-            require("lspconfig")[o.get().language_server]["document_config"]["default_config"]["cmd"]
+            require("lspconfig")[option.get().language_server]["document_config"]["default_config"]["cmd"]
 
         -- Get specific language server configs
-        local has_server, servers = require("nvim-lsp-installer/servers").get_server(o.get()
+        local has_server, servers = require("nvim-lsp-installer/servers").get_server(option.get()
                                                                                          .language_server)
 
         -- Inject binary path from LspInstall setup into setup configs for lspconfig
@@ -86,10 +88,10 @@ local function run_lsp_server(venv_name)
 
             local root_dir = servers["root_dir"]
 
-            if o.get().language_server == "pyright" then
+            if option.get().language_server == "pyright" then
                 -- local bin_path = root_dir .. "/node_modules/.bin/pyright-langserver" -- .. table.concat(cmd, " ")
                 local bin_path = root_dir .. "/node_modules/.bin/" .. table.concat(cmd, " ")
-                server_opts["cmd"] = u.split_string(bin_path, " ")
+                server_opts["cmd"] = utils.split_string(bin_path, " ")
             else
                 print(
                     "For now only pyright is properly supported when installed with the nvim-lsp-installer.")
@@ -98,7 +100,7 @@ local function run_lsp_server(venv_name)
     end
 
     -- Start LSP
-    nvim_lsp[o.get().language_server].setup(server_opts)
+    nvim_lsp[option.get().language_server].setup(server_opts)
 end
 
 M.get_client = function() return lsp.get_client() end
@@ -147,8 +149,9 @@ M.activate_venv = function(cmd_tbl)
 end
 
 M.create_venv = function(cmd_tbl)
-    local python = o.get().host_python
 
+    local python = option.get().host_python
+    
     if not python then print("No python host configured") return end
 
     local venv_name = "venv"
@@ -160,12 +163,12 @@ M.create_venv = function(cmd_tbl)
 end
 
 M.create_popup = function()
-    local lines = popup.format_lines(vim.tbl_values(c.commands_to_text))
+    local lines = popup.format_lines(vim.tbl_values(commands.commands_to_text))
 
     popup.create_popup(lines, function(row)
-        local line = vim.tbl_values(c.commands_to_text)[row]
-        local command = u.get_key_for_value(c.commands_to_text, line)
-        M[c.commands[command]]()
+        local line = vim.tbl_values(commands.commands_to_text)[row]
+        local command = utils.get_key_for_value(commands.commands_to_text, line)
+        M[commands.commands[command]]()
     end)
 end
 --
@@ -217,23 +220,22 @@ M.py_run = function(...)
 end
 
 M.setup = function(opts)
+
     -- Init all commands
-    for command, func in pairs(c.commands) do
-        vim.api.nvim_create_user_command(
-            command,
-            M[func],
-            c.commands_opts[command]
-        )
+    for command, func in pairs(commands.commands) do
+        vim.api.nvim_create_user_command(command, M[func], {
+            desc = commands.commands_opts[command]
+        })
     end
 
     -- for command, func in pairs(c.commands) do u.define_command(command, func) end
 
     -- Collect all opts from defaults and user
     opts = opts or {}
-    o.set(opts)
+    option.set(opts)
 
     -- Only activate venv if auto_source is true
-    if o.get().auto_source then run_lsp_server(opts.venv_name) end
+    if option.get().auto_source then run_lsp_server(opts.venv_name) end
 end
 
 return M

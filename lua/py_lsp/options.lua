@@ -4,7 +4,8 @@ local defaults = {
     on_attach = nil,
     capabilities = nil,
     source_strategies = {"default", "poetry", "system"},
-    host_python = nil -- this python should include the virtualenv module
+    host_python = nil, -- this python should include the virtualenv module,
+    on_server_ready = nil
 }
 
 local options = vim.deepcopy(defaults)
