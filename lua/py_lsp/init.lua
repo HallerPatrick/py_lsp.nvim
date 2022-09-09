@@ -124,9 +124,12 @@ M.reload_client = function()
     run_lsp_server(M.current_venv)
 end
 
-M.activate_venv = function(venv_name)
+M.activate_venv = function(cmd_tbl)
     local current_client = M.get_client()
     local cwd = vim.fn["getcwd"]()
+
+    local venv_name = "venv"
+    if cmd_tbl.args ~= "" then venv_name = cmd_tbl.args end
 
     local match = vim.fn.glob(path.join(cwd, venv_name, "pyvenv.cfg"))
 
@@ -143,12 +146,13 @@ M.activate_venv = function(venv_name)
     end
 end
 
-M.create_venv = function(venv_name)
+M.create_venv = function(cmd_tbl)
     local python = o.get().host_python
 
-    if not python then print("No python host configured") end
+    if not python then print("No python host configured") return end
 
-    venv_name = venv_name or "venv"
+    local venv_name = "venv"
+    if cmd_tbl.args ~= "" then venv_name = cmd_tbl.args end
 
     local output = vim.fn.trim(vim.fn.system(format("%s -m virtualenv %s", python, venv_name)))
     print(output)
@@ -215,11 +219,11 @@ end
 M.setup = function(opts)
     -- Init all commands
     for command, func in pairs(c.commands) do
-      vim.api.nvim_create_user_command(
-        command,
-        M[func],
-        {desc=c.commands_to_text[command]}
-      )
+        vim.api.nvim_create_user_command(
+            command,
+            M[func],
+            c.commands_opts[command]
+        )
     end
 
     -- for command, func in pairs(c.commands) do u.define_command(command, func) end

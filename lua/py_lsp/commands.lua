@@ -11,13 +11,13 @@ M.commands = {
     -- PyRun = "py_run"
 }
 
--- Textual description of command
-M.commands_to_text = {
-    PyLspReloadVenv = "Reload LSP server with current venv",
-    PyLspCurrentVenv = "Print out current path to venv",
-    PyLspActivateVenv = "Activate venv (default name: 'venv')",
-    PyLspDeactivateVenv = "Stop current running LSP client",
-    PyLspCreateVenv = "Create a venv in project directory (default name: 'venv')"
+M.commands_opts = {
+    PyLspReloadVenv = { desc = "Reload LSP server with current venv" },
+	PyLspCurrentVenv = { desc = "Print out current path to venv" },
+	PyLspActivateVenv = { desc = "Activate venv (default name: 'venv')", nargs = "?" },
+	PyLspDeactivateVenv = { desc = "Stop current running LSP client" },
+	PyLspCreateVenv = { desc = "Create a venv in project directory (default name: 'venv')", nargs = "?" },
+	PyLspPopup = {}
     -- PyRun = "Run python commands with current virtual env"
 }
 
