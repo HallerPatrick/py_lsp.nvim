@@ -29,7 +29,8 @@ local function on_init(source_strategies, venv_name)
             py.find_python_path(client.config.root_dir, source_strategies, venv_name)
 
         -- Pass to lsp
-        client.config = lsp.update_client_config_python_path(client.config, option.get().language_server,
+        client.config = lsp.update_client_config_python_path(client.config,
+                                                             option.get().language_server,
                                                              python_path)
 
         -- Cache to reload lsp
@@ -151,8 +152,11 @@ end
 M.create_venv = function(cmd_tbl)
 
     local python = option.get().host_python
-    
-    if not python then print("No python host configured") return end
+
+    if not python then
+        print("No python host configured")
+        return
+    end
 
     local venv_name = "venv"
     if cmd_tbl.args ~= "" then venv_name = cmd_tbl.args end
@@ -223,9 +227,7 @@ M.setup = function(opts)
 
     -- Init all commands
     for command, func in pairs(commands.commands) do
-        vim.api.nvim_create_user_command(command, M[func], {
-            desc = commands.commands_opts[command]
-        })
+        vim.api.nvim_create_user_command(command, M[func], commands.commands_opts[command])
     end
 
     -- for command, func in pairs(c.commands) do u.define_command(command, func) end
