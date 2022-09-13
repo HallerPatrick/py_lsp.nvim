@@ -16,6 +16,8 @@ M.default = function(workspace, venv_name)
             return path.join(path.dirname(match), "bin", "python")
         end
     end
+
+    return nil
 end
 
 M.poetry = function(workspace, _)
@@ -27,12 +29,36 @@ M.poetry = function(workspace, _)
         local venv = vim.fn.trim(vim.fn.system("poetry env info -p"))
         return path.join(venv, "bin", "python")
     end
+
+    return nil
 end
 
 -- M.virtualenvwrapper = function() end
 
 -- M.pipenv = function() end
 
-M.system = function() return vim.exepath("python3") or vim.exepath("python") or "python" end
+M.system = function() return vim.fn.exepath("python3") or vim.fn.exepath("python") or "python" end
+
+M.env_path = function()
+
+    local venv_paths = {}
+    local paths = vim.env.PATH
+
+    if paths == nil then return {} end
+
+    for p in vim.gsplit(paths, ":") do
+
+        local potential_python_bin = path.join(p, "python")
+        local potential_python_3_bin = path.join(p, "python3")
+
+        if vim.fn.exepath(potential_python_bin) ~= "" then
+            table.insert(venv_paths, potential_python_bin)
+        elseif vim.fn.exepath(potential_python_3_bin) ~= "" then
+            table.insert(venv_paths, potential_python_3_bin)
+        end
+    end
+
+    return venv_paths
+end
 
 return M

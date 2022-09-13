@@ -26,7 +26,11 @@ local function on_init(source_strategies, venv_name)
     return function(client)
 
         local python_path =
-            py.find_python_path(client.config.root_dir, source_strategies, venv_name)
+            py.find_first_python_path(client.config.root_dir, source_strategies, venv_name)
+
+        if python_path == nil then
+          print("Could not retrieve python path")
+        end
 
         -- Pass to lsp
         client.config = lsp.update_client_config_python_path(client.config,
@@ -176,11 +180,6 @@ M.create_popup = function()
     end)
 end
 --
--- local pickers = require "telescope.pickers"
--- local finders = require "telescope.finders"
--- local conf = require("telescope.config").values
--- local actions = require "telescope.actions"
--- local action_state = require "telescope.actions.state"
 
 -- M.create_popup = function(opts)
 --     opts = opts or {}
@@ -221,6 +220,43 @@ M.py_run = function(...)
     --     print(vim.fn.system(format("%s %s", py_path, args)))
     -- end
     print(vim.fn.system(format("%s %s", py_path, args)))
+end
+
+local pickers = require "telescope.pickers"
+local finders = require "telescope.finders"
+local conf = require("telescope.config").values
+local actions = require "telescope.actions"
+local action_state = require "telescope.actions.state"
+
+M.find_venvs = function(opts)
+  opts = opts or {}
+
+  local strategies = option.get().source_strategies
+
+  local collected_venvs = py.find_all_python_paths(strategies)
+
+  vim.pretty_print(collected_venvs)
+
+  local f = utils.flatten(collected_venvs)
+  vim.pretty_print(vim.tbl_values(f))
+
+  pickers.new(opts, {
+      prompt_title = "py_lsp.nvim: Python virtual environments",
+      finder = finders.new_table {
+          results = vim.tbl_values(f)
+      },
+      sorter = conf.generic_sorter(opts),
+      attach_mappings = function(prompt_bufnr, map)
+          actions.select_default:replace(function()
+              actions.close(prompt_bufnr)
+              local selection = action_state.get_selected_entry()
+              vim.pretty_print(selection)
+              -- func = vim.tbl_values(c.commands)[selection.index]
+          end)
+          return true
+      end
+  }):find()
+
 end
 
 M.setup = function(opts)
