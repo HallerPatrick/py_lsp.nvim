@@ -3,21 +3,32 @@ local path = require("lspconfig/util").path
 local M = {}
 
 M.default = function(workspace, venv_name)
+
     local patterns = {"*", ".*"}
 
     if venv_name ~= nil then patterns = {venv_name} end
+
+    local found_venvs = {}
 
     -- Find and use virtualenv in workspace directory.
     for _, pattern in ipairs(patterns) do
         local match = vim.fn.glob(path.join(workspace, pattern, "pyvenv.cfg"))
         if match ~= "" then
-            if string.find(match, "\n") then match = vim.gsplit(match, "\n")() end
-
-            return path.join(path.dirname(match), "bin", "python")
+            if string.find(match, "\n") then
+                for p in vim.gsplit(match, "\n") do
+                    if venv_name == pattern then
+                        return path.join(path.dirname(p), "bin", "python")
+                    else
+                        table.insert(found_venvs, path.join(path.dirname(p), "bin", "python"))
+                    end
+                end
+            else
+                table.insert(found_venvs, path.join(path.dirname(match), "bin", "python"))
+            end
         end
     end
 
-    return nil
+    return found_venvs
 end
 
 M.poetry = function(workspace, _)
@@ -37,7 +48,7 @@ end
 
 -- M.pipenv = function() end
 
-M.system = function() return vim.fn.exepath("python3") or vim.fn.exepath("python") or "python" end
+M.system = function() return vim.fn.exepath("python3") or vim.fn.exepath("python") end
 
 M.env_path = function()
 

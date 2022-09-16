@@ -5,15 +5,9 @@ M.get_key_for_value = function(t, value)
     return nil
 end
 
-M.tbl_get_keys = function(tbl)
-    local keyset = {}
-    for k, _ in pairs(tbl) do table.insert(keyset, k) end
-    return keyset
-end
-
 -- This will probably break easily
 M.get_python_venv_name = function(venv_path)
-    venv_path = string.match(venv_path, "[a-zA-Z\\.0-9]+/bin/python")
+    venv_path = string.match(venv_path, "[a-zA-Z\\.0-9_-]+/bin/python")
     return string.gsub(venv_path, "/bin/python", "")
 end
 

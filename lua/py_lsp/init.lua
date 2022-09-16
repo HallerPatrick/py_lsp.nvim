@@ -1,6 +1,11 @@
+local pickers = require "telescope.pickers"
+local finders = require "telescope.finders"
+local conf = require("telescope.config").values
+local actions = require "telescope.actions"
+local action_state = require "telescope.actions.state"
+
 local nvim_lsp = require("lspconfig")
 local util = require("lspconfig/util")
-local popup = require("py_lsp.popup")
 local option = require("py_lsp.options")
 local utils = require("py_lsp.utils")
 local commands = require("py_lsp.commands")
@@ -17,58 +22,70 @@ M.option = {
     venv_name = nil
 }
 
----Main callback funciton that is passed to lsp config
----
----@param source_strategies string Strategy used for finding venv
----@param venv_name string Name of venv
----@return function on_init callback
-local function on_init(source_strategies, venv_name)
+
+---Build `on_init` function for lspconfig
+---@param python_path string python path
+---@return function
+local function on_init(python_path)
     return function(client)
 
-        local python_path =
-            py.find_first_python_path(client.config.root_dir, source_strategies, venv_name)
-
-        if python_path == nil then
-          print("Could not retrieve python path")
-        end
+        if python_path == nil then print("Could not retrieve python path") end
 
         -- Pass to lsp
         client.config = lsp.update_client_config_python_path(client.config,
                                                              option.get().language_server,
                                                              python_path)
 
-        -- Cache to reload lsp
-        M.option.current_venv = python_path
-        M.option.venv_name = venv_name
-
         -- For display
         client.config.settings.python.venv_name = utils.get_python_venv_name(python_path)
 
-        -- Callback
-        if option.get().on_server_ready then
-            option.get().on_server_ready(M.option.current_venv, M.option.venv_name)
-        end
-
         local ok, notify = pcall(require, "notify")
 
+        iim.pretty_print(utils.get_python_venv_name(python_path))
         if ok then
             notify.notify("Using python virtual environment:\n" ..
                               client.config.settings.python.pythonPath, "info", {
                 title = "py_lsp.nvim",
-                timeout = 500
+                timeout = 300
             })
         end
     end
+
 end
 
-local function run_lsp_server(venv_name)
+---Main entry to build callback funciton that is passed to lsp config
+---
+---@param source_strategies string Strategy used for finding venv
+---@param venv_name string Name of venv
+---@return function on_init callback
+local function build_on_init(source_strategies, venv_name)
+
+    local python_path = py.find_first_python_path(vim.loop.cwd(), source_strategies, venv_name)
+
+    -- Cache to reload lsp
+    M.option.current_venv = python_path
+    M.option.venv_name = venv_name
+
+    -- Callback
+    if option.get().on_server_ready then
+        option.get().on_server_ready(M.option.current_venv, M.option.venv_name)
+    end
+
+    return on_init(python_path)
+end
+
+local function run_lsp_server(venv_name, is_path)
+    is_path = is_path or false
+
     -- Prepare capabilities if not specified in options
     local capabilities = option.get().capabilities
     if capabilities == nil then capabilities = vim.lsp.protocol.make_client_capabilities() end
 
+    local on_init_fn = is_path and on_init(venv_name) or build_on_init(option.get().source_strategies, venv_name)
+
     -- Setup server opts passed to language server
     M["server_opts"] = {
-        on_init = on_init(option.get().source_strategies, venv_name),
+        on_init = on_init_fn,
         capabilities = capabilities,
         on_attach = option.get().on_attach
     }
@@ -121,8 +138,15 @@ M.print_venv = function()
 end
 
 M.stop_client = function()
-    local client = M.get_client()
-    vim.lsp.stop_client(client.id)
+  local current_buf = vim.api.nvim_get_current_buf()
+
+  local servers_on_buffer = vim.lsp.get_active_clients { buffer = current_buf }
+  for _, client in ipairs(servers_on_buffer) do
+    local filetypes = client.config.filetypes
+    if filetypes and vim.tbl_contains(filetypes, vim.bo[current_buf].filetype) then
+      client.stop()
+    end
+  end
 end
 
 M.reload_client = function()
@@ -170,40 +194,29 @@ M.create_venv = function(cmd_tbl)
     run_lsp_server(venv_name)
 end
 
-M.create_popup = function()
-    local lines = popup.format_lines(vim.tbl_values(commands.commands_to_text))
+M.create_popup = function(opts)
+    opts = opts or {}
 
-    popup.create_popup(lines, function(row)
-        local line = vim.tbl_values(commands.commands_to_text)[row]
-        local command = utils.get_key_for_value(commands.commands_to_text, line)
-        M[commands.commands[command]]()
-    end)
+    local func
+
+    pickers.new(opts, {
+        prompt_title = "py_lsp.nvim actions",
+        finder = finders.new_table {
+            results = vim.tbl_values(commands.commands_opts)
+        },
+        sorter = conf.generic_sorter(opts),
+        attach_mappings = function(prompt_bufnr, map)
+            actions.select_default:replace(function()
+                actions.close(prompt_bufnr)
+                local selection = action_state.get_selected_entry()
+                func = vim.tbl_values(commands.commands)[selection.index]
+                M[func]()
+            end)
+            return true
+        end
+    }):find()
+
 end
---
-
--- M.create_popup = function(opts)
---     opts = opts or {}
---
---     local func
---
---     pickers.new(opts, {
---         prompt_title = "py_lsp.nvim actions",
---         finder = finders.new_table {
---             results = vim.tbl_values(c.commands_to_text)
---         },
---         sorter = conf.generic_sorter(opts),
---         attach_mappings = function(prompt_bufnr, map)
---             actions.select_default:replace(function()
---                 actions.close(prompt_bufnr)
---                 local selection = action_state.get_selected_entry()
---                 func = vim.tbl_values(c.commands)[selection.index]
---             end)
---             return true
---         end
---     }):find()
---
---     M[func]()
--- end
 
 M.py_run = function(...)
     local args = {...}
@@ -222,40 +235,37 @@ M.py_run = function(...)
     print(vim.fn.system(format("%s %s", py_path, args)))
 end
 
-local pickers = require "telescope.pickers"
-local finders = require "telescope.finders"
-local conf = require("telescope.config").values
-local actions = require "telescope.actions"
-local action_state = require "telescope.actions.state"
-
 M.find_venvs = function(opts)
-  opts = opts or {}
+    opts = opts or {}
 
-  local strategies = option.get().source_strategies
+    local strategies = option.get().source_strategies
 
-  local collected_venvs = py.find_all_python_paths(strategies)
+    local collected_venvs = py.find_all_python_paths(strategies)
 
-  vim.pretty_print(collected_venvs)
+    local annotated_venvs = {}
 
-  local f = utils.flatten(collected_venvs)
-  vim.pretty_print(vim.tbl_values(f))
+    for p, s in pairs(collected_venvs) do
+        table.insert(annotated_venvs, string.format("(%s) %s", s, p))
+    end
 
-  pickers.new(opts, {
-      prompt_title = "py_lsp.nvim: Python virtual environments",
-      finder = finders.new_table {
-          results = vim.tbl_values(f)
-      },
-      sorter = conf.generic_sorter(opts),
-      attach_mappings = function(prompt_bufnr, map)
-          actions.select_default:replace(function()
-              actions.close(prompt_bufnr)
-              local selection = action_state.get_selected_entry()
-              vim.pretty_print(selection)
-              -- func = vim.tbl_values(c.commands)[selection.index]
-          end)
-          return true
-      end
-  }):find()
+    pickers.new(opts, {
+        prompt_title = "py_lsp.nvim: Python virtual environments",
+        finder = finders.new_table {
+            results = annotated_venvs
+        },
+        sorter = conf.generic_sorter(opts),
+        attach_mappings = function(prompt_bufnr, _)
+            actions.select_default:replace(function()
+                actions.close(prompt_bufnr)
+                local selection = action_state.get_selected_entry()
+                local selected_path = vim.tbl_keys(collected_venvs)[selection.index]
+                M.stop_client()
+
+                run_lsp_server(selected_path, true)
+            end)
+            return true
+        end
+    }):find()
 
 end
 
@@ -273,7 +283,7 @@ M.setup = function(opts)
     option.set(opts)
 
     -- Only activate venv if auto_source is true
-    if option.get().auto_source then run_lsp_server(opts.venv_name) end
+    if option.get().auto_source then run_lsp_server(option.get().default_venv_name) end
 end
 
 return M
