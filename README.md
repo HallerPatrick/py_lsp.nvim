@@ -18,7 +18,11 @@ Plug 'HallerPatrick/py_lsp.nvim'
 Using [packer.nvim](https://github.com/wbthomason/packer.nvim):
 
 ```lua
-use {'HallerPatrick/py_lsp.nvim'}
+use {
+    'HallerPatrick/py_lsp.nvim',
+    -- Support for versioning
+    -- tag = "v0.0.1" 
+}
 ```
 
 ## Usage
@@ -53,6 +57,7 @@ Please be aware of other plugins, autostarting lsp servers.
 | `:PyLspActivateVenv` | venv name | Activates a virtual env with given name (default: 'venv'). This venv should lie in project root                           |
 | `:PyLspCreateVenv`   | venv name | Creates a virtual env with given name (default: 'venv'). Requires `host_python` to be set and have `virtualenv` installed |
 | `:PyRun`             | command   | Run files and modules from current virtuale env                                                                           |
+| `:PyFindVenvs`       | No        | List all found Virtualenvs found by different strategies. Select and reload LSP                                           |
 
 Most of these commands can be also run over a popup menu with `:PyLspPopup`.
 
