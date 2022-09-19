@@ -22,7 +22,6 @@ M.option = {
     venv_name = nil
 }
 
-
 ---Build `on_init` function for lspconfig
 ---@param python_path string python path
 ---@return function
@@ -81,7 +80,8 @@ local function run_lsp_server(venv_name, is_path)
     local capabilities = option.get().capabilities
     if capabilities == nil then capabilities = vim.lsp.protocol.make_client_capabilities() end
 
-    local on_init_fn = is_path and on_init(venv_name) or build_on_init(option.get().source_strategies, venv_name)
+    local on_init_fn = is_path and on_init(venv_name) or
+                           build_on_init(option.get().source_strategies, venv_name)
 
     -- Setup server opts passed to language server
     M["server_opts"] = {
@@ -138,15 +138,17 @@ M.print_venv = function()
 end
 
 M.stop_client = function()
-  local current_buf = vim.api.nvim_get_current_buf()
+    local current_buf = vim.api.nvim_get_current_buf()
 
-  local servers_on_buffer = vim.lsp.get_active_clients { buffer = current_buf }
-  for _, client in ipairs(servers_on_buffer) do
-    local filetypes = client.config.filetypes
-    if filetypes and vim.tbl_contains(filetypes, vim.bo[current_buf].filetype) then
-      client.stop()
+    local servers_on_buffer = vim.lsp.get_active_clients {
+        buffer = current_buf
+    }
+    for _, client in ipairs(servers_on_buffer) do
+        local filetypes = client.config.filetypes
+        if filetypes and vim.tbl_contains(filetypes, vim.bo[current_buf].filetype) then
+            client.stop()
+        end
     end
-  end
 end
 
 M.reload_client = function()

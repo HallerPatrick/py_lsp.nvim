@@ -18,11 +18,9 @@ M.find_first_python_path = function(workspace, strategies, venv_name)
             local python_path = strategy_fn(workspace, venv_name)
             if python_path ~= nil then
 
-              if type(python_path) == "table" then
-                return python_path[1]
-              end
+                if type(python_path) == "table" then return python_path[1] end
 
-              return python_path
+                return python_path
             end
         end
     end
@@ -45,9 +43,7 @@ M.find_all_python_paths = function(strategies)
             local python_path = strategy_fn()
 
             if type(python_path) == "table" then
-                for _, path in pairs(python_path) do
-                    collected_venvs[path] = strategy
-                end
+                for _, path in pairs(python_path) do collected_venvs[path] = strategy end
             end
 
             if type(python_path) == "string" then collected_venvs[python_path] = strategy end

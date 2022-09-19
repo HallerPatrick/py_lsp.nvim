@@ -22,33 +22,21 @@ end
 
 M.split_string = function(s, delimiter)
     local result = {}
-    for match in (s..delimiter):gmatch("(.-)"..delimiter) do
-        table.insert(result, match)
-    end
+    for match in (s .. delimiter):gmatch("(.-)" .. delimiter) do table.insert(result, match) end
     return result;
 end
 
-local function noop(...)
-    return ...
-end
+local function noop(...) return ... end
 
 -- convert a nested table to a flat table
 M.flatten = function(t, sep, key_modifier, res)
-    if type(t) ~= 'table' then
-        return t
-    end
+    if type(t) ~= 'table' then return t end
 
-    if sep == nil then
-        sep = '.'
-    end
+    if sep == nil then sep = '.' end
 
-    if res == nil then
-        res = {}
-    end
+    if res == nil then res = {} end
 
-    if key_modifier == nil then
-        key_modifier = noop
-    end
+    if key_modifier == nil then key_modifier = noop end
 
     for k, v in pairs(t) do
         if type(v) == 'table' then
@@ -62,6 +50,5 @@ M.flatten = function(t, sep, key_modifier, res)
     end
     return res
 end
-
 
 return M
