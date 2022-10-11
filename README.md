@@ -4,7 +4,7 @@
 
 `py_lsp.nvim` is a neovim plugin that helps with using the [lsp](https://neovim.io/doc/user/lsp.html) feature for python development.
 
-It tackles the problem about the activation and usage of python virtual environments
+It tackles the problem about the activation and usage of python virtual environments and conda environments
 for the nvim lsp.
 
 ## Installation
@@ -55,6 +55,7 @@ Please be aware of other plugins, autostarting lsp servers.
 | `:PyLspDeactiveVenv` | No        | Shuts down the current LSP client                                                                                         |
 | `:PyLspReload`       | No        | Reload LSP client with current python venv                                                                                |
 | `:PyLspActivateVenv` | venv name | Activates a virtual env with given name (default: 'venv'). This venv should lie in project root                           |
+| `:PyLspActivateCondaEnv` | env name | Activates a conda env with given name (default: 'base'). Requires `conda` to be installed on the system                |
 | `:PyLspCreateVenv`   | venv name | Creates a virtual env with given name (default: 'venv'). Requires `host_python` to be set and have `virtualenv` installed |
 | `:PyRun`             | command   | Run files and modules from current virtuale env                                                                           |
 | `:PyFindVenvs`       | No        | List all found Virtualenvs found by different strategies. Select and reload LSP                                           |
@@ -115,7 +116,7 @@ Default Values:
     auto_source = true,
     language_server = "pyright",
     on_attach = nil,
-    source_strategies = {"default", "poetry", "system"},
+    source_strategies = {"default", "poetry", "conda", "system"},
     capabilities = nil,
     host_python = nil
 ```
@@ -155,7 +156,6 @@ require("py_lsp").setup({
 
 - Support for different environment systems:
   - virtualenvwrapper
-  - Conda
   - Pipenv
 - Agnostic against other python lsp server
 
