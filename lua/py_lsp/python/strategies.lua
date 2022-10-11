@@ -44,6 +44,20 @@ M.poetry = function(workspace, _)
     return nil
 end
 
+M.conda = function(_,_)
+    -- If no standard venv found look for conda environments
+    local found_envs = {}
+    local json_env_list = vim.fn.systemlist("conda env list --json")
+    local raw_env_list = {table.unpack(json_env_list,3,#json_env_list-2)}
+
+    for _,raw_env in ipairs(raw_env_list) do
+        local env = string.match(raw_env,'[^%s"]+')
+        table.insert(found_envs, path.join(env, "bin", "python"))
+    end
+
+    return found_envs
+end
+
 -- M.virtualenvwrapper = function() end
 
 -- M.pipenv = function() end
