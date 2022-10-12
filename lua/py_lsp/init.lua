@@ -179,6 +179,38 @@ M.activate_venv = function(cmd_tbl)
     end
 end
 
+M.activate_conda_env = function(cmd_tbl)
+    local current_client = M.get_client()
+    local home = os.getenv("HOME")
+
+    local venv_name = "base"
+    if cmd_tbl.args ~= "" then venv_name = cmd_tbl.args end
+
+    local env_path = ""
+    local base_env = vim.fn.trim(vim.fn.split(string.match(vim.fn.system("conda info"), "base environment : [^%s]+"),":")[2])
+    local envs_loc = vim.fn.trim(vim.fn.split(string.match(vim.fn.system("conda info"), "envs directories : [^%s]+"),":")[2])
+    if (base_env ~= "null") and venv_name == "base" then
+        env_path = path.join(base_env, "bin", "python")
+    elseif envs_loc ~= "null" then
+        local match = vim.fn.glob(path.join(envs_loc, venv_name))
+        if match ~= nil then
+            env_path = path.join(match, "bin", "python")
+        end
+    end
+
+    if env_path ~= "" then
+        if current_client ~= nil then
+            print("Stopping current running lsp server")
+            vim.lsp.stop_client(current_client.id)
+        end
+
+        run_lsp_server(env_path,true)
+        print("Activated conda env")
+    else
+        print("Cannot find conda env")
+    end
+end
+
 M.create_venv = function(cmd_tbl)
 
     local python = option.get().host_python
