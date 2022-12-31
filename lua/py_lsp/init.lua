@@ -1,9 +1,3 @@
-local pickers = require "telescope.pickers"
-local finders = require "telescope.finders"
-local conf = require("telescope.config").values
-local actions = require "telescope.actions"
-local action_state = require "telescope.actions.state"
-
 local nvim_lsp = require("lspconfig")
 local util = require("lspconfig/util")
 local option = require("py_lsp.options")
@@ -187,15 +181,15 @@ M.activate_conda_env = function(cmd_tbl)
     if cmd_tbl.args ~= "" then venv_name = cmd_tbl.args end
 
     local env_path = ""
-    local base_env = vim.fn.trim(vim.fn.split(string.match(vim.fn.system("conda info"), "base environment : [^%s]+"),":")[2])
-    local envs_loc = vim.fn.trim(vim.fn.split(string.match(vim.fn.system("conda info"), "envs directories : [^%s]+"),":")[2])
+    local base_env = vim.fn.trim(vim.fn.split(string.match(vim.fn.system("conda info"),
+                                                           "base environment : [^%s]+"), ":")[2])
+    local envs_loc = vim.fn.trim(vim.fn.split(string.match(vim.fn.system("conda info"),
+                                                           "envs directories : [^%s]+"), ":")[2])
     if (base_env ~= "null") and venv_name == "base" then
         env_path = path.join(base_env, "bin", "python")
     elseif envs_loc ~= "null" then
         local match = vim.fn.glob(path.join(envs_loc, venv_name))
-        if match ~= nil then
-            env_path = path.join(match, "bin", "python")
-        end
+        if match ~= nil then env_path = path.join(match, "bin", "python") end
     end
 
     if env_path ~= "" then
@@ -204,7 +198,7 @@ M.activate_conda_env = function(cmd_tbl)
             vim.lsp.stop_client(current_client.id)
         end
 
-        run_lsp_server(env_path,true)
+        run_lsp_server(env_path, true)
         print("Activated conda env")
     else
         print("Cannot find conda env")
@@ -229,26 +223,14 @@ M.create_venv = function(cmd_tbl)
 end
 
 M.create_popup = function(opts)
-    opts = opts or {}
 
-    local func
+    local has_telescope, pickers = pcall(require, "py_lsp.picker")
 
-    pickers.new(opts, {
-        prompt_title = "py_lsp.nvim actions",
-        finder = finders.new_table {
-            results = vim.tbl_values(commands.commands_opts)
-        },
-        sorter = conf.generic_sorter(opts),
-        attach_mappings = function(prompt_bufnr, map)
-            actions.select_default:replace(function()
-                actions.close(prompt_bufnr)
-                local selection = action_state.get_selected_entry()
-                func = vim.tbl_values(commands.commands)[selection.index]
-                M[func]()
-            end)
-            return true
-        end
-    }):find()
+    if has_telescope then
+        pickers.popup_picker(opts, M)
+    else
+        print("telescope not installed")
+    end
 
 end
 
@@ -282,24 +264,13 @@ M.find_venvs = function(opts)
         table.insert(annotated_venvs, string.format("(%s) %s", s, p))
     end
 
-    pickers.new(opts, {
-        prompt_title = "py_lsp.nvim: Python virtual environments",
-        finder = finders.new_table {
-            results = annotated_venvs
-        },
-        sorter = conf.generic_sorter(opts),
-        attach_mappings = function(prompt_bufnr, _)
-            actions.select_default:replace(function()
-                actions.close(prompt_bufnr)
-                local selection = action_state.get_selected_entry()
-                local selected_path = vim.tbl_keys(collected_venvs)[selection.index]
-                M.stop_client()
+    local has_telescope, pickers = pcall(require, "py_lsp.picker")
 
-                run_lsp_server(selected_path, true)
-            end)
-            return true
-        end
-    }):find()
+    if has_telescope then
+        pickers.find_vens_picker(opts, annotated_venvs, collected_venvs, run_lsp_server)
+    else
+        print("telescope not installed")
+    end
 
 end
 
@@ -309,8 +280,6 @@ M.setup = function(opts)
     for command, func in pairs(commands.commands) do
         vim.api.nvim_create_user_command(command, M[func], commands.commands_opts[command])
     end
-
-    -- for command, func in pairs(c.commands) do u.define_command(command, func) end
 
     -- Collect all opts from defaults and user
     opts = opts or {}
