@@ -45,6 +45,7 @@ function M.find_vens_picker(opts, annotated_venvs, collected_venvs, run_func)
                 actions.close(prompt_bufnr)
                 local selection = action_state.get_selected_entry()
                 local selected_path = vim.tbl_keys(collected_venvs)[selection.index]
+                -- We use lsp.stop_client before
                 vim.lsp.stop_client()
 
                 run_func(selected_path, true)

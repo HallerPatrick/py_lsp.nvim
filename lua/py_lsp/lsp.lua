@@ -22,6 +22,7 @@ M.update_client_config_python_path = function(config, language_server, python_pa
     return config
 end
 
+
 ---Return to current active client, will return last one found
 ---@return any
 M.get_client = function()
@@ -41,5 +42,23 @@ M.get_client = function()
     end
     return current_client
 end
+
+
+--- Stops the lsp client for current filetype (python)
+--- TODO: Check if obsolete
+M.stop_client = function()
+    local current_buf = vim.api.nvim_get_current_buf()
+
+    local servers_on_buffer = vim.lsp.get_active_clients {
+        buffer = current_buf
+    }
+    for _, client in ipairs(servers_on_buffer) do
+        local filetypes = client.config.filetypes
+        if filetypes and vim.tbl_contains(filetypes, vim.bo[current_buf].filetype) then
+            client.stop()
+        end
+    end
+end
+
 
 return M

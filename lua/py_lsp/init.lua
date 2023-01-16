@@ -119,10 +119,8 @@ local function run_lsp_server(venv_name, is_path)
     nvim_lsp[option.get().language_server].setup(server_opts)
 end
 
-M.get_client = function() return lsp.get_client() end
-
 M.print_venv = function()
-    local client = M.get_client()
+    local client = lsp.get_client()
     if client == nil or client.config.settings.python.pythonPath == nil then
         print("No venv activated")
         return
@@ -131,28 +129,15 @@ M.print_venv = function()
     print("Client pyright with venv: " .. client.config.settings.python.pythonPath)
 end
 
-M.stop_client = function()
-    local current_buf = vim.api.nvim_get_current_buf()
-
-    local servers_on_buffer = vim.lsp.get_active_clients {
-        buffer = current_buf
-    }
-    for _, client in ipairs(servers_on_buffer) do
-        local filetypes = client.config.filetypes
-        if filetypes and vim.tbl_contains(filetypes, vim.bo[current_buf].filetype) then
-            client.stop()
-        end
-    end
-end
 
 M.reload_client = function()
-    local client = M.get_client()
+    local client = lsp.get_client()
     vim.lsp.stop_client(client.id)
     run_lsp_server(M.current_venv)
 end
 
 M.activate_venv = function(cmd_tbl)
-    local current_client = M.get_client()
+    local current_client = lsp.get_client()
     local cwd = vim.fn["getcwd"]()
 
     local venv_name = "venv"
@@ -174,7 +159,7 @@ M.activate_venv = function(cmd_tbl)
 end
 
 M.activate_conda_env = function(cmd_tbl)
-    local current_client = M.get_client()
+    local current_client = lsp.get_client()
     local home = os.getenv("HOME")
 
     local venv_name = "base"
@@ -238,7 +223,7 @@ M.py_run = function(...)
     local args = {...}
     args = table.concat(args, " ")
 
-    local client = M.get_client()
+    local client = lsp.get_client()
 
     local py_path = client.config.settings.python.pythonPath
 
@@ -249,6 +234,11 @@ M.py_run = function(...)
     --     print(vim.fn.system(format("%s %s", py_path, args)))
     -- end
     print(vim.fn.system(format("%s %s", py_path, args)))
+end
+
+--- Wrapper for callback to lsp.stop_client
+M.stop_client = function()
+  lsp.stop_client()
 end
 
 M.find_venvs = function(opts)
