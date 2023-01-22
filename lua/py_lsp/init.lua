@@ -129,7 +129,6 @@ M.print_venv = function()
     print("Client pyright with venv: " .. client.config.settings.python.pythonPath)
 end
 
-
 M.reload_client = function()
     local client = lsp.get_client()
     vim.lsp.stop_client(client.id)
@@ -221,25 +220,30 @@ end
 
 M.py_run = function(...)
     local args = {...}
-    args = table.concat(args, " ")
+
+    -- If table is empty, then get current buffer file path
+    if vim.tbl_isempty(args) then
+        args = vim.api.nvim_buf_get_name(0)
+    else
+        args = table.concat(args, " ")
+    end
 
     local client = lsp.get_client()
 
     local py_path = client.config.settings.python.pythonPath
 
-    -- TODO: Make this work
-    -- if u.is_module_available("asyncrun") then
-    --     vim.cmd("AsynRun echo 'Hello World'")
-    -- else
-    --     print(vim.fn.system(format("%s %s", py_path, args)))
-    -- end
-    print(vim.fn.system(format("%s %s", py_path, args)))
+    local has_toggleterm, runner = pcall(require, "py_lsp.run")
+
+    if has_toggleterm then
+        runner.run_toggleterm(py_path, args)
+    else
+        runner.run_system(py_path, args)
+    end
+
 end
 
 --- Wrapper for callback to lsp.stop_client
-M.stop_client = function()
-  lsp.stop_client()
-end
+M.stop_client = function() lsp.stop_client() end
 
 M.find_venvs = function(opts)
     opts = opts or {}
