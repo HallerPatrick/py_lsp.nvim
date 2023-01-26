@@ -22,9 +22,21 @@ M.toggleterm_available = toggleterm_available
 M.run_toggleterm = function(py_env, args)
 
     local cmd_preamble = command_preamble(py_env, args)
+
+    local cmd = format("%s && %s %s", cmd_preamble, py_env, args)
+
     local terminal = Terminal:new({
-        cmd = format("%s && %s %s", cmd_preamble, py_env, args),
-        close_on_exit = false
+        cmd = cmd,
+        close_on_exit = false,
+        on_open = function(term)
+            vim.cmd("startinsert!")
+            vim.api.nvim_buf_set_keymap(term.bufnr, "n", "q", "<cmd>close<CR>", {
+                noremap = true,
+                silent = true
+            })
+        end,
+        on_close = function(term) vim.cmd("startinsert!") end
+
     })
 
     terminal:toggle()
