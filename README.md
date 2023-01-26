@@ -35,7 +35,8 @@ Put this in your `init.lua` (or wrap in lua call for your `init.vim`)
 ```lua
 require'py_lsp'.setup {
   -- This is optional, but allows to create virtual envs from nvim
-  host_python = "/path/to/python/bin"
+  host_python = "/path/to/python/bin",
+  default_venv_name = ".venv" -- For local venv
 }
 ```
 
@@ -57,21 +58,17 @@ Please be aware of other plugins, autostarting lsp servers.
 | `:PyLspActivateVenv` | venv name | Activates a virtual env with given name (default: 'venv'). This venv should lie in project root                           |
 | `:PyLspActivateCondaEnv` | env name | Activates a conda env with given name (default: 'base'). Requires `conda` to be installed on the system                |
 | `:PyLspCreateVenv`   | venv name | Creates a virtual env with given name (default: 'venv'). Requires `host_python` to be set and have `virtualenv` installed |
-| `:PyRun`             | command   | Run files and modules from current virtuale env                                                                           |
+| `:PyRun`             | Optional<command>   | Run files and modules from current virtuale env. If no arguments specified, will run current buffer                                                                           |
 | `:PyFindVenvs`       | No        | List all found Virtualenvs found by different strategies. Select and reload LSP                                           |
 
 Most of these commands can be also run over a popup menu with `:PyLspPopup`.
 
-#### Example Workflow
 
-You open up your python project. Because there is no python virtual env confirgured, the LSP is not starting.
+#### PyRun
 
-1. You run `:PyLspCreateVenv venv` to create a new virtual env from `host_python`.
-2. You run `:PyLspCurrentVenv` to check if the LSP client is using your new venv.
-3. You run `:PyRun -m pip install -r requirements.txt` to install project dependencies.
-4. You run `:PyLspReload` so that the LSP client also find your new site-packages for autocompletion and correct linting.
-
-You start programming!
+The `:PyRun` command uses the currently activated virtuale environment to either execute the current buffer on
+or the arguments passed to pather. If `toggleterm` is an available plugin the command is executed through 
+a `toggleterm` terminal.
 
 ### Extras
 
@@ -115,10 +112,13 @@ Default:
 Default Values:
     auto_source = true,
     language_server = "pyright",
-    on_attach = nil,
     source_strategies = {"default", "poetry", "conda", "system"},
     capabilities = nil,
-    host_python = nil
+    host_python = nil,
+    on_attach = nil,
+    on_server_ready = nil
+    default_venv_name = nil,
+    venvs = {}
 ```
 
 ## Other Language servers
@@ -165,10 +165,3 @@ require("py_lsp").setup({
   but all features are run with a 'pyright' server or not at all.
 - `py_lsp` expects to find virtualenv in the `cwd`, please check for that
 
-## Note
-
-This plugin is created due to following [Issue](https://github.com/neovim/nvim-lspconfig/issues/500#issuecomment-877305226).
-
-This plugin currently includes a utility to automatically pass a virtualenv to
-the pyright lsp server before initialization also take from the [Issue](https://github.com/neovim/nvim-lspconfig/issues/500#issuecomment-851247107).
-(Thanks [lithammer](https://github.com/lithammer) and others).
