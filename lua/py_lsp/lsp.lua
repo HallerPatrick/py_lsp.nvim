@@ -1,27 +1,42 @@
 local M = {}
 
-M.allowed_clients = {"pyright", "jedi-language-server"}
+M.allowed_clients = {"pyright", "jedi-language-server", "pylsp"}
 
 ---Update the client config to include the updated python path
 ---
----@param config table Config to update
+---@param client table LSP client
 ---@param language_server string Language server name
 ---@param python_path string Python path value
 ---@return table New config
-M.update_client_config_python_path = function(config, language_server, python_path)
+M.update_client_config_python_path = function(client, language_server, python_path)
+    local config = {}
     -- TODO: Depends on lsp in use, maybe change this
     if language_server == "pyright" then
+        config = client.config
         config.settings.python.pythonPath = python_path
+    elseif language_server == "pylsp" then
+        local settings = {
+            pylsp = {
+                plugins = {
+                    jedi = {
+                        environment = python_path
+                    }
+                }
+            }
+        }
+
+        client.config.settings = vim.tbl_deep_extend("force", client.config.settings, settings)
+        config = client.config
     else
-        config.settings = {
+        client.config.settings = {
             python = {
                 pythonPath = python_path
             }
         }
+        config = client.config
     end
     return config
 end
-
 
 ---Return to current active client, will return last one found
 ---@return any
@@ -43,7 +58,6 @@ M.get_client = function()
     return current_client
 end
 
-
 --- Stops the lsp client for current filetype (python)
 --- TODO: Check if obsolete
 M.stop_client = function()
@@ -59,6 +73,5 @@ M.stop_client = function()
         end
     end
 end
-
 
 return M

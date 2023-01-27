@@ -25,8 +25,7 @@ local function on_init(python_path)
         if python_path == nil then print("Could not retrieve python path") end
 
         -- Pass to lsp
-        client.config = lsp.update_client_config_python_path(client.config,
-                                                             option.get().language_server,
+        client.config = lsp.update_client_config_python_path(client, option.get().language_server,
                                                              python_path)
 
         -- For display
@@ -34,7 +33,6 @@ local function on_init(python_path)
 
         local ok, notify = pcall(require, "notify")
 
-        iim.pretty_print(utils.get_python_venv_name(python_path))
         if ok then
             notify.notify("Using python virtual environment:\n" ..
                               client.config.settings.python.pythonPath, "info", {
@@ -43,7 +41,6 @@ local function on_init(python_path)
             })
         end
     end
-
 end
 
 ---Main entry to build callback funciton that is passed to lsp config
@@ -159,7 +156,6 @@ end
 
 M.activate_conda_env = function(cmd_tbl)
     local current_client = lsp.get_client()
-    local home = os.getenv("HOME")
 
     local venv_name = "base"
     if cmd_tbl.args ~= "" then venv_name = cmd_tbl.args end
