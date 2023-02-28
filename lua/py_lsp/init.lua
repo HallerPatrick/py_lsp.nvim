@@ -33,7 +33,7 @@ local function on_init(python_path)
 
         local ok, notify = pcall(require, "notify")
 
-        if ok then
+        if ok and option.get().plugins.notify.use then
             notify.notify("Using python virtual environment:\n" ..
                               client.config.settings.python.pythonPath, "info", {
                 title = "py_lsp.nvim",
@@ -229,6 +229,8 @@ M.py_run = function(...)
     local py_path = client.config.settings.python.pythonPath
 
     local has_toggleterm, runner = pcall(require, "py_lsp.run")
+
+    vim.pretty_print(py_path)
 
     if has_toggleterm then
         runner.run_toggleterm(py_path, args)

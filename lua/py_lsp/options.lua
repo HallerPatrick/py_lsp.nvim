@@ -7,7 +7,15 @@ local defaults = {
     host_python = nil, -- this python should include the virtualenv module,
     on_server_ready = nil,
     default_venv_name = nil,
-    venvs = {}
+    venvs = {},
+    plugins = {
+      notify = {
+        use = true
+      },
+      toggleterm = {
+        use = true
+      }
+    }
 }
 
 local options = vim.deepcopy(defaults)

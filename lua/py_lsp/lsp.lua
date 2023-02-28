@@ -1,3 +1,5 @@
+local options = require("py_lsp.options")
+
 local M = {}
 
 M.allowed_clients = {"pyright", "jedi-language-server", "pylsp"}
@@ -72,6 +74,18 @@ M.stop_client = function()
             client.stop()
         end
     end
+end
+
+M.get_current_python_venv_path = function ()
+
+  local lsp_client = M.get_client()
+
+  local language_server = options.get().language_server
+
+  if language_server == "pyright" then
+    return lsp_client.config.settings.python.pythonPath
+  end
+
 end
 
 return M
