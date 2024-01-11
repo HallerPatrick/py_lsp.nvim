@@ -19,13 +19,14 @@ M.update_client_config_python_path = function(client, language_server, python_pa
     elseif language_server == "pylsp" then
         local settings = {
             pylsp = {
-                plugins = {
-                    jedi = {
-                        environment = python_path
-                    }
-                }
+                plugins = {}
             }
         }
+
+        settings.pylsp.plugins = options.get().pylsp_plugins
+        settings.pylsp.plugins.jedi = {
+                        environment = python_path
+                    }
 
         client.config.settings = vim.tbl_deep_extend("force", client.config.settings, settings)
         config = client.config

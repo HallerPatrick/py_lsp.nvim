@@ -118,6 +118,7 @@ Default Values:
     on_attach = nil,
     on_server_ready = nil
     default_venv_name = nil,
+    pylsp_plugins = {}, // the table with the various pylsp plugins with their parameters
     venvs = {}
 ```
 
