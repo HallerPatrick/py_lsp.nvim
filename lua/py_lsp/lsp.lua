@@ -28,6 +28,7 @@ M.update_client_config_python_path = function(client, language_server, python_pa
                         environment = python_path
                     }
 
+        client.config.settings.python.pythonPath = python_path
         client.config.settings = vim.tbl_deep_extend("force", client.config.settings, settings)
         config = client.config
     else
