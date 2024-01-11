@@ -20,9 +20,16 @@ M.option = {
 ---@param python_path string python path
 ---@return function
 local function on_init(python_path)
+    local ok, notify = pcall(require, "notify")
     return function(client)
-
-        if python_path == nil then print("Could not retrieve python path") end
+        if python_path == nil then
+            if option.get().plugins.notify.use then
+                notify.notify("Could not retrieve python path, try :PyLspReload", "error")
+            else
+                print("Could not retrieve python path, try :PyLspReload")
+            end
+            return
+        end
 
         -- Pass to lsp
         client.config = lsp.update_client_config_python_path(client, option.get().language_server,
@@ -31,11 +38,9 @@ local function on_init(python_path)
         -- For display
         client.config.settings.python.venv_name = utils.get_python_venv_name(python_path)
 
-        local ok, notify = pcall(require, "notify")
-
         if ok and option.get().plugins.notify.use then
             notify.notify("Using python virtual environment:\n" ..
-                              client.config.settings.python.pythonPath, "info", {
+                              python_path, "info", {
                 title = "py_lsp.nvim",
                 timeout = 300
             })
@@ -78,6 +83,9 @@ local function run_lsp_server(venv_name, is_path)
     M["server_opts"] = {
         on_init = on_init_fn,
         capabilities = capabilities,
+        settings = {
+            python = {}
+        },
         on_attach = option.get().on_attach
     }
 
@@ -118,7 +126,7 @@ end
 
 M.print_venv = function()
     local client = lsp.get_client()
-    if client == nil or client.config.settings.python.pythonPath == nil then
+    if client == nil or client.config.settings.python == nil or client.config.settings.python.pythonPath == nil then
         print("No venv activated")
         return
     end
@@ -261,7 +269,12 @@ M.find_venvs = function(opts)
     if has_telescope then
         pickers.find_vens_picker(opts, annotated_venvs, collected_venvs, run_lsp_server)
     else
-        print("telescope not installed")
+        local ok, notify = pcall(require, "notify")
+        if ok and option.get().plugins.notify.use then
+            notify.notify(vim.fn.json_encode(collected_venvs), "info")
+        else
+            print("telescope not installed")
+        end
     end
 
 end
