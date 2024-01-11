@@ -40,7 +40,7 @@ local function on_init(python_path)
 
         if ok and option.get().plugins.notify.use then
             notify.notify("Using python virtual environment:\n" ..
-                              python_path, "info", {
+                              client.config.settings.python.pythonPath, "info", {
                 title = "py_lsp.nvim",
                 timeout = 300
             })
