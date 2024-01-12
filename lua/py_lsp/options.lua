@@ -8,6 +8,7 @@ local defaults = {
     on_server_ready = nil,
     default_venv_name = nil,
     venvs = {},
+    pylsp_plugins = {},
     plugins = {
       notify = {
         use = true

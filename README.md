@@ -118,6 +118,7 @@ Default Values:
     on_attach = nil,
     on_server_ready = nil
     default_venv_name = nil,
+    pylsp_plugins = {}, // the table with the various pylsp plugins with their parameters
     venvs = {}
 ```
 
@@ -163,5 +164,5 @@ require("py_lsp").setup({
 
 - All features are currently only available with `pyright` and `jedi-language-server`. `pylsp` is weird. It will still be started,
   but all features are run with a 'pyright' server or not at all.
-- `py_lsp` expects to find virtualenv in the `cwd`, please check for that
+- `py_lsp` expects to find virtualenv in the `cwd`, please check for that (`poetry config virtualenvs.in-project true` and next `poetry update` and remove the previous venv folder)
 
