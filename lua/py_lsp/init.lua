@@ -24,9 +24,9 @@ local function on_init(python_path)
     return function(client)
         if python_path == nil then
             if option.get().plugins.notify.use then
-                notify.notify("Could not retrieve python path, try :PyLspReload", "error")
+                notify.notify("Could not retrieve python path, try :PyLspReloadVenv", "error")
             else
-                print("Could not retrieve python path, try :PyLspReload")
+                print("Could not retrieve python path, try :PyLspReloadVenv")
             end
             return
         end
@@ -91,18 +91,16 @@ local function run_lsp_server(venv_name, is_path)
 
     local server_opts = M.server_opts
 
+    -- Get call command of lang server
+    local cmd =
+            require("lspconfig")[option.get().language_server]["document_config"]["default_config"]["cmd"]
     -- Check weather the lsp server is installed with `nvim-lsp-installer`
     if utils.has_lsp_installed_server(option.get().language_server) and
         vim.tbl_contains(lsp.allowed_clients, option.get().language_server) then
 
-        -- Get call command of lang server
-        local cmd =
-            require("lspconfig")[option.get().language_server]["document_config"]["default_config"]["cmd"]
-
         -- Get specific language server configs
         local has_server, servers = require("nvim-lsp-installer/servers").get_server(option.get()
                                                                                          .language_server)
-
         -- Inject binary path from LspInstall setup into setup configs for lspconfig
         -- Feels a bit hacky
         if has_server then
@@ -118,10 +116,26 @@ local function run_lsp_server(venv_name, is_path)
                     "For now only pyright is properly supported when installed with the nvim-lsp-installer.")
             end
         end
+    else
+    -- Check in Venv for LSP
+        local venv_path = string.gsub(M.option.current_venv,'python','')
+        local lsp_path = venv_path .. table.concat(cmd)
+        local ok, notify = pcall(require, "notify")
+        if M.file_exists(lsp_path) then
+            if ok and option.get().plugins.notify.use then
+                notify.notify("Found LSP " .. table.concat(cmd) .." in Venv", "info")
+            end
+            server_opts["cmd"] = utils.split_string(lsp_path, " ")
+        end
     end
 
     -- Start LSP
     nvim_lsp[option.get().language_server].setup(server_opts)
+end
+
+M.file_exists = function(fname)
+	local stat = vim.uv.fs_stat(vim.fs.normalize(fname))
+	return (stat and stat.type) or false
 end
 
 M.print_venv = function()
