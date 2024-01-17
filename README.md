@@ -7,6 +7,9 @@
 It tackles the problem about the activation and usage of python virtual environments and conda environments
 for the nvim lsp.
 
+Includes optional support for [nvim-notify](https://github.com/rcarriga/nvim-notify) plugins (for custom popup information) and [nvim-lsp-installer](https://github.com/williamboman/nvim-lsp-installer) for LSP detection.
+Includes a detection inside the Virtual Environment for the LSP presence as last fallback (before check in the host machine).
+
 ## Installation
 
 Using [vim-plug](https://github.com/junegunn/vim-plug):
@@ -162,7 +165,6 @@ require("py_lsp").setup({
 
 ## Limitations
 
-- All features are currently only available with `pyright` and `jedi-language-server`. `pylsp` is weird. It will still be started,
-  but all features are run with a 'pyright' server or not at all.
+- All features are currently only available with `pyright` and `jedi-language-server`. `pylsp` is weird, works only if it is installed in the same project env.
 - `py_lsp` expects to find virtualenv in the `cwd`, please check for that (`poetry config virtualenvs.in-project true` and next `poetry update` and remove the previous venv folder)
 
