@@ -118,14 +118,16 @@ local function run_lsp_server(venv_name, is_path)
         end
     else
     -- Check in Venv for LSP
-        local venv_path = string.gsub(M.option.current_venv,'python','')
-        local lsp_path = venv_path .. table.concat(cmd)
-        local ok, notify = pcall(require, "notify")
-        if M.file_exists(lsp_path) then
-            if ok and option.get().plugins.notify.use then
-                notify.notify("Found LSP " .. table.concat(cmd) .." in Venv", "info")
+        if M.option.current_venv ~= nil then
+            local venv_path = string.gsub(M.option.current_venv,'python','')
+            local lsp_path = venv_path .. table.concat(cmd)
+            local ok, notify = pcall(require, "notify")
+            if M.file_exists(lsp_path) then
+                if ok and option.get().plugins.notify.use then
+                    notify.notify("Found LSP " .. table.concat(cmd) .." in Venv", "info")
+                end
+                server_opts["cmd"] = utils.split_string(lsp_path, " ")
             end
-            server_opts["cmd"] = utils.split_string(lsp_path, " ")
         end
     end
 
