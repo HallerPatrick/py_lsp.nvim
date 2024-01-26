@@ -136,7 +136,12 @@ local function run_lsp_server(venv_name, is_path)
 end
 
 M.file_exists = function(fname)
-	local stat = vim.uv.fs_stat(vim.fs.normalize(fname))
+    -- Keep it backwards compatible with nvim < 0.10
+    if vim.fn.has("nvim-0.10") == 1 then
+      local stat = vim.uv.fs_stat(vim.fs.normalize(fname))
+    else
+        local stat = vim.loop.fs_stat(vim.fn.fnameescape(fname))
+    end
 	return (stat and stat.type) or false
 end
 

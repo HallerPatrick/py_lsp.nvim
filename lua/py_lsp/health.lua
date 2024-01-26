@@ -7,7 +7,7 @@ M.check_setup = function ()
   local client = lsp_utils.get_client()
 
   if not client then
-    vim.health.report_error("No client attached")
+    vim.health.error("No client attached")
     return false
   end
   -- 
@@ -15,17 +15,17 @@ M.check_setup = function ()
   -- client.settings.python.venv_name / PythonPath
   if client.config.settings.python.venv_name then
     local name = client.config.settings.python.venv_name
-    vim.health.report_ok("Virtual Environment '" .. name .. "' found and activated")
+    vim.health.ok("Virtual Environment '" .. name .. "' found and activated")
   else
-    vim.health.report_error("Path to virtual environment not detected")
+    vim.health.error("Path to virtual environment not detected")
   end
 
   if client.config.settings.python.pythonPath then
     local path = client.config.settings.python.pythonPath
-    vim.health.report_ok("Virtual Environment '" .. path .. "' found and activated")
+    vim.health.ok("Virtual Environment '" .. path .. "' found and activated")
   else
 
-    vim.health.report_error("Path of virtual env not found")
+    vim.health.error("Path of virtual env not found")
     return false
   end
 
@@ -34,13 +34,13 @@ end
 
 
 M.check = function()
-  vim.health.report_start("py_lsp.nvim Report")
+  vim.health.start("py_lsp.nvim Report")
 
   -- Check for set path and venv
   if M.check_setup() then
-    vim.health.report_ok("Setup is correct")
+    vim.health.ok("Setup is correct")
   else
-    vim.health.report_error("Setup is incorrect")
+    vim.health.error("Setup is incorrect")
   end
 
   -- TODO: Check for used strategy might need some adjustments
