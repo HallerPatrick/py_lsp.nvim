@@ -9,8 +9,6 @@ M.check_setup = function()
 		vim.health.error("No client attached")
 		return false
 	end
-	--
-	-- vim.pretty_print(client)
 	-- client.settings.python.venv_name / PythonPath
 	if client.config.settings.python.venv_name then
 		local name = client.config.settings.python.venv_name

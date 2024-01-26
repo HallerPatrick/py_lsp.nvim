@@ -261,7 +261,7 @@ M.py_run = function(...)
 
 	local has_toggleterm, runner = pcall(require, "py_lsp.run")
 
-	vim.pretty_print(py_path)
+	vim.print(py_path)
 
 	if has_toggleterm then
 		runner.run_toggleterm(py_path, args)

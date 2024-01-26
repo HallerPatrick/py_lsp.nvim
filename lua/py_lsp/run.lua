@@ -22,6 +22,11 @@ end
 M.toggleterm_available = toggleterm_available
 
 M.run_toggleterm = function(py_env, args)
+	if not toggleterm_available then
+		print("toggleterm is not available")
+		return
+	end
+
 	local cmd_preamble = command_preamble(py_env, args)
 
 	local cmd = format("%s && %s %s", cmd_preamble, py_env, args)
