@@ -147,7 +147,7 @@ M.print_venv = function()
 		return
 	end
 
-	print("Client pyright with venv: " .. client.config.settings.python.pythonPath)
+	print("Client " .. option.get().language_server .. " with venv: " .. client.config.settings.python.pythonPath)
 end
 
 M.reload_client = function()

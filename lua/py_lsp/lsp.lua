@@ -79,13 +79,7 @@ M.stop_client = function()
 end
 
 M.get_current_python_venv_path = function()
-	local lsp_client = M.get_client()
-
-	local language_server = options.get().language_server
-
-	if language_server == "pyright" then
-		return lsp_client.config.settings.python.pythonPath
-	end
+    return M.get_client().config.settings.python.pythonPath
 end
 
 return M
