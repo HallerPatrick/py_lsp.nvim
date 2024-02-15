@@ -73,7 +73,6 @@ local function run_lsp_server(venv_name)
 
     if toml_config then
       option.set(toml_config)
-      vim.print(toml_file)
       M.runtime.toml_file = toml_file
     end
   end
