@@ -7,7 +7,7 @@
 It tackles the problem about the activation and usage of python virtual environments and conda environments
 for the nvim lsp.
 
-Includes optional support for [nvim-notify](https://github.com/rcarriga/nvim-notify) plugins (for custom popup information) and [nvim-lsp-installer](https://github.com/williamboman/nvim-lsp-installer) for LSP detection.
+Includes optional support for [nvim-notify](https://github.com/rcarriga/nviqm-notify) plugins (for custom popup information) and [nvim-lsp-installer](https://github.com/williamboman/nvim-lsp-installer) for LSP detection.
 Includes a detection inside the Virtual Environment for the LSP presence as last fallback (before check in the host machine).
 
 ## Installation
@@ -73,37 +73,6 @@ The `:PyRun` command uses the currently activated virtuale environment to either
 or the arguments passed to pather. If `toggleterm` is an available plugin the command is executed through 
 a `toggleterm` terminal.
 
-### Extras
-
-The virtual environment path and name can be retrieved with `client.config.settings.python.pythonPath` and `client.config.settings.python.venv_name`. This can for example be used in your statuslines.
-
-Example provider for [feline](https://github.com/famiu/feline.nvim):
-
-```lua
-local function lsp_provider(component)
-
-    local clients = {}
-    local icon = component.icon or ' '
-
-    for _, client in pairs(vim.lsp.buf_get_clients()) do
-        if client.name == "pyright" then
-          -- Check if lsp was initialized with py_lsp
-          if client.config.settings.python["pythonPath"] ~= nil then
-            local venv_name = client.config.settings.python.venv_name
-            clients[#clients+1] = icon .. client.name .. '('.. venv_name .. ')'
-          end
-        else
-          clients[#clients+1] = icon .. client.name
-        end
-    end
-
-    return table.concat(clients, ' ')
-end
-```
-
-This will give you a VSCode like status:
-
-![Statusline with LSP server and venv name](./statusline_venv_name.png)
 
 ### Configuration
 
@@ -123,6 +92,29 @@ Default Values:
     default_venv_name = nil,
     pylsp_plugins = {}, // the table with the various pylsp plugins with their parameters
     venvs = {}
+```
+
+
+One can also provide settings like `default_venv_name` or `source_stragie` in a `pyproject.toml` file, 
+to have a per-project setting which venv to use.
+
+```toml
+[tool.pylsp]
+default_venv_name = "my_conda_venv"
+
+# Beware, that the source_strategie is a string, not a table
+source_strategie = "conda"
+```
+
+This requires a plugin for loading toml files, so include the following in your nvim config:
+Lazy:
+
+```lua
+{
+    "HallerPatrick/py_lsp.nvim",
+    dependencies = { "dharmx/toml.nvim" },
+    ...
+}
 ```
 
 ## Other Language servers
@@ -152,8 +144,6 @@ require("py_lsp").setup({
     language_server = "jedi_language_server",
     capabilities = capabilities
 })
-
-
 ```
 
 ## Todo
@@ -162,9 +152,3 @@ require("py_lsp").setup({
   - virtualenvwrapper
   - Pipenv
 - Agnostic against other python lsp server
-
-## Limitations
-
-- All features are currently only available with `pyright` and `jedi-language-server`. `pylsp` is weird, works only if it is installed in the same project env.
-- `py_lsp` expects to find virtualenv in the `cwd`, please check for that (`poetry config virtualenvs.in-project true` and next `poetry update` and remove the previous venv folder)
-

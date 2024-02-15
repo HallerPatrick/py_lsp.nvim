@@ -46,7 +46,7 @@ function M.find_vens_picker(opts, annotated_venvs, collected_venvs, run_func)
 				-- We use lsp.stop_client before
 				vim.lsp.stop_client()
 
-				run_func(selected_path, true)
+				run_func(selected_path)
 			end)
 			return true
 		end,
