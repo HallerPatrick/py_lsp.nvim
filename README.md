@@ -99,7 +99,7 @@ One can also provide settings like `default_venv_name` or `source_stragie` in a 
 to have a per-project setting which venv to use.
 
 ```toml
-[tool.pylsp]
+[tool.py_lsp]
 default_venv_name = "my_conda_venv"
 
 # Beware, that the source_strategie is a string, not a table
