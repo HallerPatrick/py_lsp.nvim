@@ -62,7 +62,7 @@ Please be aware of other plugins, autostarting lsp servers.
 | `:PyLspActivateCondaEnv` | env name | Activates a conda env with given name (default: 'base'). Requires `conda` to be installed on the system                |
 | `:PyLspCreateVenv`   | venv name | Creates a virtual env with given name (default: 'venv'). Requires `host_python` to be set and have `virtualenv` installed |
 | `:PyRun`             | Optional<command>   | Run files and modules from current virtuale env. If no arguments specified, will run current buffer                                                                           |
-| `:PyFindVenvs`       | No        | List all found Virtualenvs found by different strategies. Select and reload LSP                                           |
+| `:PyLspFindVenvs`       | No        | List all found Virtualenvs found by different strategies. Select and reload LSP                                           |
 
 Most of these commands can be also run over a popup menu with `:PyLspPopup`.
 
