@@ -24,7 +24,7 @@ local function on_init(python_path)
   local ok, notify = pcall(require, "notify")
   return function(client)
     if python_path == nil then
-      if option.get().plugins.notify.use then
+      if option.get().plugins.notify.use and ok then
         notify.notify("Could not retrieve python path, try :PyLspReloadVenv", "error")
       else
         print("Could not retrieve python path, try :PyLspReloadVenv")
