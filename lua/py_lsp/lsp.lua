@@ -45,7 +45,7 @@ end
 ---Return to current active client, will return last one found
 ---@return any
 M.get_client = function()
-	local clients = vim.lsp.get_active_clients()
+	local clients = vim.lsp.get_clients()
 
 	if clients == nil or clients == {} then
 		print("No python client attached")
@@ -67,7 +67,7 @@ end
 M.stop_client = function()
 	local current_buf = vim.api.nvim_get_current_buf()
 
-	local servers_on_buffer = vim.lsp.get_active_clients({
+	local servers_on_buffer = vim.lsp.get_clients({
 		buffer = current_buf,
 	})
 	for _, client in ipairs(servers_on_buffer) do
