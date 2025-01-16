@@ -1,7 +1,7 @@
 local path = require("lspconfig/util").path
 
 function get_last_dir(path)
-    return path:match("([^/]+)$")
+	return path:match("([^/]+)$")
 end
 
 local M = {}
@@ -13,9 +13,9 @@ M.default = function(workspace, venv_name)
 
 	local patterns = { "*", ".*" }
 
-    if venv_name ~= nil then
-        patterns = { venv_name }
-    end
+	if venv_name ~= nil then
+		patterns = { venv_name }
+	end
 
 	local found_venvs = {}
 
@@ -56,22 +56,22 @@ M.poetry = function(workspace, _)
 end
 
 M.conda = function(_, venv_name)
-    -- If no standard venv found look for conda environments
-    local found_envs = {}
-    local json_env_list = vim.fn.systemlist("$CONDA_EXE env list --json")
-    table.unpack = table.unpack or unpack -- 5.1 compatibility
-    local raw_env_list = { table.unpack(json_env_list, 3, #json_env_list - 2) }
-    for _, raw_env in ipairs(raw_env_list) do
-        local env = string.match(raw_env, '[^%s"]+')
+	-- If no standard venv found look for conda environments
+	local found_envs = {}
+	local json_env_list = vim.fn.systemlist("$CONDA_EXE env list --json")
+	table.unpack = table.unpack or unpack -- 5.1 compatibility
+	local raw_env_list = { table.unpack(json_env_list, 3, #json_env_list - 2) }
+	for _, raw_env in ipairs(raw_env_list) do
+		local env = string.match(raw_env, '[^%s"]+')
 
-        if venv_name == get_last_dir(env) then
-            return path.join(env, "bin", "python")
-        end
+		if venv_name == get_last_dir(env) then
+			return path.join(env, "bin", "python")
+		end
 
-        table.insert(found_envs, path.join(env, "bin", "python"))
-    end
+		table.insert(found_envs, path.join(env, "bin", "python"))
+	end
 
-    return found_envs
+	return found_envs
 end
 
 M.hatch = function(_, venv_name)
