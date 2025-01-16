@@ -7,11 +7,15 @@ end
 local M = {}
 
 M.default = function(workspace, venv_name)
+	if workspace == nil then
+		return nil
+	end
+
 	local patterns = { "*", ".*" }
 
-	if venv_name ~= nil then
-		patterns = { venv_name }
-	end
+    if venv_name ~= nil then
+        patterns = { venv_name }
+    end
 
 	local found_venvs = {}
 
@@ -38,34 +42,46 @@ end
 
 M.poetry = function(workspace, _)
 	-- If no standard venv found look for poetry
-	local match = vim.fn.glob(path.join(workspace, "poetry.lock"))
+	if workspace ~= nil then
+		local match = vim.fn.glob(path.join(workspace, "poetry.lock"))
 
-	-- TODO: This could throw errors, should be handled
-	if match ~= "" then
-		local venv = vim.fn.trim(vim.fn.system("poetry env info -p"))
-		return path.join(venv, "bin", "python")
+		-- TODO: This could throw errors, should be handled
+		if match ~= "" then
+			local venv = vim.fn.trim(vim.fn.system("poetry env info -p"))
+			return path.join(venv, "bin", "python")
+		end
 	end
 
 	return nil
 end
 
 M.conda = function(_, venv_name)
-	-- If no standard venv found look for conda environments
-	local found_envs = {}
-	local json_env_list = vim.fn.systemlist("$CONDA_EXE env list --json")
-	table.unpack = table.unpack or unpack -- 5.1 compatibility
-	local raw_env_list = { table.unpack(json_env_list, 3, #json_env_list - 2) }
-	for _, raw_env in ipairs(raw_env_list) do
-		local env = string.match(raw_env, '[^%s"]+')
+    -- If no standard venv found look for conda environments
+    local found_envs = {}
+    local json_env_list = vim.fn.systemlist("$CONDA_EXE env list --json")
+    table.unpack = table.unpack or unpack -- 5.1 compatibility
+    local raw_env_list = { table.unpack(json_env_list, 3, #json_env_list - 2) }
+    for _, raw_env in ipairs(raw_env_list) do
+        local env = string.match(raw_env, '[^%s"]+')
 
         if venv_name == get_last_dir(env) then
-          return path.join(env, "bin", "python")
+            return path.join(env, "bin", "python")
         end
 
-		table.insert(found_envs, path.join(env, "bin", "python"))
-	end
+        table.insert(found_envs, path.join(env, "bin", "python"))
+    end
 
-	return found_envs
+    return found_envs
+end
+
+M.hatch = function(_, venv_name)
+	local venv = vim.fn.trim(vim.fn.system("hatch env find"))
+	print(venv)
+	local exit_code = vim.v.shell_error
+	if exit_code == 0 then
+		return path.join(venv, "bin", "python")
+	end
+	return nil
 end
 
 -- M.virtualenvwrapper = function() end

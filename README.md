@@ -84,7 +84,7 @@ Default:
 Default Values:
     auto_source = true,
     language_server = "pyright",
-    source_strategies = {"default", "poetry", "conda", "system"},
+    source_strategies = {"default", "poetry", "conda", "hatch", "system"},
     capabilities = nil,
     host_python = nil,
     on_attach = nil,
