@@ -76,7 +76,6 @@ end
 
 M.hatch = function(_, venv_name)
 	local venv = vim.fn.trim(vim.fn.system("hatch env find"))
-	print(venv)
 	local exit_code = vim.v.shell_error
 	if exit_code == 0 then
 		return path.join(venv, "bin", "python")
