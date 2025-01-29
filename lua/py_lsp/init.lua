@@ -105,7 +105,7 @@ local function run_lsp_server(venv_name)
 
   local server_opts = M.server_opts
 
-   -- Get call command of lang server
+  -- Get call command of lang server
   local cmd = require("lspconfig")[option.get().language_server]["document_config"]["default_config"]["cmd"]
   -- Check weather the lsp server is installed with `nvim-lsp-installer`
   if
