@@ -23,10 +23,15 @@ M.check_pyproject = function(workspace, target)
     return false
 end
 
+M.get_workspace = function(workspace)
+    if workspace == nil then
+        workspace = vim.fn.getcwd()
+    end
+    return workspace
+end
+
 M.default = function(workspace, venv_name)
-	if workspace == nil then
-		return nil
-	end
+	workspace = M.get_workspace(workspace)
 
 	local patterns = { "*", ".*" }
 
@@ -59,17 +64,17 @@ end
 
 M.poetry = function(workspace, _)
 	-- If no standard venv found look for poetry
-	if workspace ~= nil then
-		local match = vim.fn.glob(path.join(workspace, "poetry.lock"))
+    workspace = M.get_workspace(workspace)
 
-		-- TODO: This could throw errors, should be handled
-		if match ~= "" then
-			local venv = vim.fn.trim(vim.fn.system("poetry env info -p"))
-			return path.join(venv, "bin", "python")
-		end
+	local match = vim.fn.glob(path.join(workspace, "poetry.lock"))
+
+	-- TODO: This could throw errors, should be handled
+	if match ~= "" then
+		local venv = vim.fn.trim(vim.fn.system("poetry env info -p"))
+		return path.join(venv, "bin", "python")
 	end
 
-	return nil
+	return {}
 end
 
 M.conda = function(_, venv_name)
@@ -91,19 +96,17 @@ M.conda = function(_, venv_name)
 	return found_envs
 end
 
-
-M.hatch = function(workspace, venv_name)
-	if workspace ~= nil then
-		if M.check_pyproject(workspace, "hatch") then
-			local venv = vim.fn.trim(vim.fn.system("hatch env find"))
-			local exit_code = vim.v.shell_error
-			if exit_code == 0 then
-				return path.join(venv, "bin", "python")
-			end
+M.hatch = function(workspace, _)
+	workspace = M.get_workspace(workspace)
+	if M.check_pyproject(workspace, "hatch") then
+		local venv = vim.fn.trim(vim.fn.system("hatch env find"))
+		local exit_code = vim.v.shell_error
+		if exit_code == 0 then
+			return path.join(venv, "bin", "python")
 		end
 	end
 
-	return nil
+	return {}
 end
 
 -- M.virtualenvwrapper = function() end
