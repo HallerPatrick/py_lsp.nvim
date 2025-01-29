@@ -6,6 +6,23 @@ end
 
 local M = {}
 
+M.check_pyproject = function(workspace, target)
+    local pyproject_path = vim.fn.glob(path.join(workspace, "pyproject.toml"))
+
+    if pyproject_path ~= "" then
+        local f = io.open(pyproject_path, "r")
+        if f then
+            local content = f:read("*all")
+            f:close()
+            if content:match("%f[%w]" .. target .. "%f[%W]") then
+                print("Found pyproject.toml with " .. target .. " in: " .. pyproject_path)
+                return true
+            end
+        end
+    end
+    return false
+end
+
 M.default = function(workspace, venv_name)
 	if workspace == nil then
 		return nil
@@ -74,12 +91,18 @@ M.conda = function(_, venv_name)
 	return found_envs
 end
 
-M.hatch = function(_, venv_name)
-	local venv = vim.fn.trim(vim.fn.system("hatch env find"))
-	local exit_code = vim.v.shell_error
-	if exit_code == 0 then
-		return path.join(venv, "bin", "python")
+
+M.hatch = function(workspace, venv_name)
+	if workspace ~= nil then
+		if M.check_pyproject(workspace, "hatch") then
+			local venv = vim.fn.trim(vim.fn.system("hatch env find"))
+			local exit_code = vim.v.shell_error
+			if exit_code == 0 then
+				return path.join(venv, "bin", "python")
+			end
+		end
 	end
+
 	return nil
 end
 

@@ -142,8 +142,10 @@ local function run_lsp_server(venv_name)
     end
   end
 
-  -- Start LSP
-  nvim_lsp[option.get().language_server].setup(server_opts)
+  if server_opts["cmd"] ~= nil then
+    -- Start LSP
+    nvim_lsp[option.get().language_server].setup(server_opts)
+  end
 end
 
 
@@ -159,7 +161,9 @@ end
 
 M.reload_client = function()
   local client = lsp.get_client()
-  vim.lsp.stop_client(client.id)
+  if client then
+    vim.lsp.stop_client(client.id)
+  end
   run_lsp_server(M.current_venv)
 end
 
