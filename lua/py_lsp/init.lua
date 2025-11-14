@@ -109,7 +109,30 @@ local function run_lsp_server(venv_name)
   local server_opts = M.server_opts
 
   -- Get call command of lang server
-  local cmd = require("lspconfig")[option.get().language_server]["document_config"]["default_config"]["cmd"]
+  local server_name = option.get().language_server
+  -- Check if we're on Neovim 0.11+ with native LSP support
+  local has_native_lsp = vim.lsp.config ~= nil and vim.lsp.enable ~= nil
+  local cmd = nil
+
+  if not has_native_lsp then
+    -- Pre-0.11: Get cmd from lspconfig
+    local has_lspconfig, lspconfig = pcall(require, "lspconfig")
+    if has_lspconfig and lspconfig[server_name] then
+      local server_config = lspconfig[server_name]
+      if server_config.document_config and server_config.document_config.default_config then
+        cmd = server_config.document_config.default_config.cmd
+      end
+    end
+  else
+    -- 0.11+: Use hardcoded default commands for known servers
+    -- This is only needed for nvim-lsp-installer and venv detection features
+    local default_cmds = {
+      pyright = { "pyright-langserver", "--stdio" },
+      ["jedi-language-server"] = { "jedi-language-server" },
+      pylsp = { "pylsp" },
+    }
+    cmd = default_cmds[server_name]
+  end
   -- Check weather the lsp server is installed with `nvim-lsp-installer`
   if
       utils.has_lsp_installed_server(option.get().language_server)
@@ -122,9 +145,10 @@ local function run_lsp_server(venv_name)
     if has_server then
       local root_dir = servers["root_dir"]
 
-      if option.get().language_server == "pyright" then
+      if option.get().language_server == "pyright" and cmd then
         -- local bin_path = root_dir .. "/node_modules/.bin/pyright-langserver" -- .. table.concat(cmd, " ")
-        local bin_path = root_dir .. "/node_modules/.bin/" .. table.concat(cmd, " ")
+        local cmd_str = type(cmd) == "table" and table.concat(cmd, " ") or cmd
+        local bin_path = root_dir .. "/node_modules/.bin/" .. cmd_str
         server_opts["cmd"] = utils.split_string(bin_path, " ")
       else
         print("For now only pyright is properly supported when installed with the nvim-lsp-installer.")
@@ -132,17 +156,15 @@ local function run_lsp_server(venv_name)
     end
   else
     -- Check in Venv for LSP
-    if M.runtime.current_venv ~= nil then
+    if M.runtime.current_venv ~= nil and cmd then
       local venv_path = string.gsub(M.runtime.current_venv, "python", "")
-      if type(cmd) == "table" then
-        cmd = table.concat(cmd)
-      end
-      cmd = string.gsub(cmd, "/usr/local/bin/", "")
-      local lsp_path = venv_path .. cmd
+      local cmd_str = type(cmd) == "table" and table.concat(cmd, " ") or cmd
+      cmd_str = string.gsub(cmd_str, "/usr/local/bin/", "")
+      local lsp_path = venv_path .. cmd_str
       local ok, notify = pcall(require, "notify")
       if utils.file_exists(lsp_path) then
         if ok and option.get().plugins.notify.use then
-          notify.notify("Found LSP " .. cmd .. " in Venv", "info")
+          notify.notify("Found LSP " .. cmd_str .. " in Venv", "info")
         end
         server_opts["cmd"] = utils.split_string(lsp_path, " ")
       end
@@ -150,7 +172,15 @@ local function run_lsp_server(venv_name)
   end
 
   -- Start LSP
-  nvim_lsp[option.get().language_server].setup(server_opts)
+  if has_native_lsp then
+    -- Neovim 0.11+ native LSP config
+    -- vim.lsp.config will automatically load server defaults from nvim-lspconfig's lsp/ directory
+    vim.lsp.config(server_name, server_opts)
+    vim.lsp.enable(server_name)
+  else
+    -- Fall back to nvim-lspconfig for older versions
+    nvim_lsp[server_name].setup(server_opts)
+  end
 end
 
 
